@@ -2,6 +2,7 @@ numpy
 numpyencoder
 ipython
 astropy
+fitsio
 regions
 future
 scipy
