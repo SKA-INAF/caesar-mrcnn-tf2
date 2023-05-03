@@ -15,6 +15,7 @@ import numpy as np
 import functools
 import warnings
 from distutils.version import LooseVersion
+from typing import Tuple
 
 ## ASTRO MODULES
 from astropy.io import ascii, fits
@@ -509,7 +510,7 @@ def resize_mask(mask: np.ndarray, scale: float, padding: int, crop: Tuple[int, i
 		y, x, h, w = crop
 		mask = mask[y:y + h, x:x + w]
 	else:
-	mask = np.pad(mask, padding, mode='constant', constant_values=0)
+		mask = np.pad(mask, padding, mode='constant', constant_values=0)
         
 	return mask
 
@@ -599,4 +600,20 @@ def generate_tiles(img_xmin, img_xmax, img_ymin, img_ymax, tileSizeX, tileSizeY,
 def compose_fcns(*funcs):
   """ Compose a list of functions like (f . g . h)(x) = f(g(h(x)) """
   return functools.reduce(lambda f, g: lambda x: f(g(x)), funcs)
+  
+def set_type(s: str) -> str:
+	""" 
+		Move float and int types from 64 to 32 bits
+			Args:
+				s: str, data type name
+			Returns: str, new data type
+	"""
+	mapping = {
+		'int64': 'int32',
+		'int32': 'int32',
+		'float32': 'float32',
+		'float64': 'float32'
+	}
+	s = mapping[s] if s in mapping.keys() else s
+	return s  
 

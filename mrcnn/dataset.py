@@ -24,8 +24,9 @@ import warnings
 from typing import Tuple
 import uuid
 
-import utils
-import addon_utils
+## USER MODULES
+import mrcnn.utils
+import mrcnn.addon_utils
 
 
 ##############################
@@ -408,7 +409,7 @@ class Dataset:
 			transformed = self.augmenter(image=image, masks=masks_list)
 			if transformed is None:
 				logger.error("Failed to apply augmentation to images & masks!")
-				retun None
+				return None
 			proc_image= transformed[0]
 			proc_masks = transformed[1]
 
