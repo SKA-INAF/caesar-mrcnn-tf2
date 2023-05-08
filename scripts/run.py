@@ -34,17 +34,21 @@ from mrcnn.model import mask_rcnn_functional
 #===========================
 #==   IMPORT MPI
 #===========================
-try:
-	from mpi4py import MPI as MPI
-	comm= MPI.COMM_WORLD
-	nproc= comm.Get_size()
-	procId= comm.Get_rank()
-except Exception as e:
-	logger.warn("Failed to import mpi4py module (err=%s), cannot run in parallel ..." % str(e))
-	MPI= None
-	comm= None
-	nproc= 1
-	procId= 0
+MPI= None
+comm= None
+nproc= 1
+procId= 0
+#try:
+#	from mpi4py import MPI as MPI
+#	comm= MPI.COMM_WORLD
+#	nproc= comm.Get_size()
+#	procId= comm.Get_rank()
+#except Exception as e:
+#	logger.warn("Failed to import mpi4py module (err=%s), cannot run in parallel ..." % str(e))
+#	MPI= None
+#	comm= None
+#	nproc= 1
+#	procId= 0
 
 
 logger.info("Tensorflow executing in eager mode? %d" % (tf.executing_eagerly()))
