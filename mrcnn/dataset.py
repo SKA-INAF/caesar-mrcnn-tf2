@@ -319,7 +319,7 @@ class Dataset:
 		
 		# - Read image
 		filename= self.image_info[image_id]['path']
-		logger.info("Reading image %s ..." % (filename))
+		logger.debug("Reading image %s ..." % (filename))
 		
 		res= addon_utils.read_fits(filename, strip_deg_axis=True)
 		if res is None:
@@ -359,7 +359,7 @@ class Dataset:
 		counter= 0
 
 		for filename in filenames:
-			logger.info("Reading mask file %s ..." % (filename))
+			logger.debug("Reading mask file %s ..." % (filename))
 			res= addon_utils.read_fits(filename, strip_deg_axis=True)
 			if res is None:
 				logger.error("Failed to read mask file %s!" % (filename))
@@ -396,7 +396,7 @@ class Dataset:
 		"""
         
 		# - Read image 
-		logger.info("Read image at index %d ..." % (idx))    
+		logger.debug("Read image at index %d ..." % (idx))    
 		image= self.load_image(idx)
 		if image is None:
 			logger.error("Failed to load image id %d!" % (idx))
@@ -410,14 +410,14 @@ class Dataset:
 
 		# - Apply pre-processing?
 		if self.preprocessor is not None:
-			logger.info("Apply pre-processing to image at index %d ..." % (idx))
+			logger.debug("Apply pre-processing to image at index %d ..." % (idx))
 			image= self.preprocessor(original_image)
 			if image is None:
 				logger.error("Failed to pre-process source image data at index %d (sname=%s, label=%s, classid=%s)!" % (index, sname, str(label), str(classid)))
 				return None
 				
 		# - Read masks
-		logger.info("Read masks at index %d ..." % (idx))
+		logger.debug("Read masks at index %d ..." % (idx))
 		res= self.load_mask(idx)
 		if res is None:
 			logger.error("Failed to load mask image id %d!" % (idx))
@@ -427,7 +427,7 @@ class Dataset:
 		class_ids_array= res[1]
 		
 		# - Resize images
-		logger.info("Resize images at index %d (min_dim=%d, max_dim=%d, min_scale=%d, mode=%s) ..." % (idx, self.kwargs['image_min_dim'], self.kwargs['image_max_dim'], self.kwargs['image_min_scale'], self.kwargs['image_resize_mode']))
+		logger.debug("Resize images at index %d (min_dim=%d, max_dim=%d, min_scale=%d, mode=%s) ..." % (idx, self.kwargs['image_min_dim'], self.kwargs['image_max_dim'], self.kwargs['image_min_scale'], self.kwargs['image_resize_mode']))
 		image, window, scale, padding, crop = utils.resize_image(
 			image,
 			min_dim=self.kwargs['image_min_dim'],
@@ -437,14 +437,14 @@ class Dataset:
 		)
 
 		# - Resize masks
-		logger.info("Resize masks at index %d ..." % (idx))
+		logger.debug("Resize masks at index %d ..." % (idx))
 		masks_array = addon_utils.resize_mask(original_masks_array, scale, padding, crop)
 
 		# - Apply augmentation
 		_image_shape = image.shape
 
 		if self.augmenter:
-			logger.info("Apply augmentation ...")
+			logger.debug("Apply augmentation ...")
 			masks_list = [masks_array[:, :, i].astype('float') for i in range(masks_array.shape[2])]
 			transformed = self.augmenter(data=image, masks=masks_list)
 			if transformed is None:
@@ -470,13 +470,13 @@ class Dataset:
 		original_class_ids = class_ids_array[_orig_idx]
 
 		# - Compute bboxes
-		logger.info("Computing bounding boxes ...")
+		logger.debug("Computing bounding boxes ...")
 		bboxes = utils.extract_bboxes(proc_masks)
 		original_bboxes = utils.extract_bboxes(original_masks_array)
 
 		# - Active classes
 		#   Different datasets have different classes, so track the classes supported in the dataset of this image.
-		logger.info("Computing active classes ...")
+		logger.debug("Computing active classes ...")
 		active_class_ids = np.zeros([len(self.classes_dict.keys())], dtype=np.int32)
 
 		# 1 for classes that are in the dataset of the image
@@ -490,7 +490,7 @@ class Dataset:
 			proc_masks = utils.minimize_mask(bboxes, proc_masks, self.kwargs['mini_mask_shape'])
 
 		# - Image meta data
-		logger.info("Computing image metadata ...")
+		logger.debug("Computing image metadata ...")
 		image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
 
 		return proc_image, proc_masks, proc_class_ids, bboxes, image_meta, \
