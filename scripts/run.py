@@ -28,6 +28,8 @@ from mrcnn.preprocessing import Resizer, MinMaxNormalizer, AbsMinMaxNormalizer, 
 from mrcnn.preprocessing import Shifter, Standardizer, ChanDivider, MaskShrinker, BorderMasker
 from mrcnn.preprocessing import ChanResizer, ZScaleTransformer, Chan3Trasformer
 from mrcnn.augmentation import Augmenter
+from mrcnn.training import train_model
+from mrcnn.model import mask_rcnn_functional
 
 #===========================
 #==   IMPORT MPI
@@ -65,7 +67,7 @@ def parse_args():
 	parser.add_argument('--normalize_minmax', dest='normalize_minmax', action='store_true',help='Normalize each channel in range [0,1]')	
 	parser.set_defaults(normalize_minmax=False)
 	parser.add_argument('-norm_min', '--norm_min', dest='norm_min', required=False, type=float, default=0., action='store',help='Normalization min value (default=0)')
-	parser.add_argument('-norm_max', '--norm_max', dest='norm_max', required=False, type=float, default=1., action='store',help='Normalization max value (default=0)')
+	parser.add_argument('-norm_max', '--norm_max', dest='norm_max', required=False, type=float, default=1., action='store',help='Normalization max value (default=1)')
 	
 	parser.add_argument('--subtract_bkg', dest='subtract_bkg', action='store_true',help='Subtract bkg from ref channel image')	
 	parser.set_defaults(subtract_bkg=False)
@@ -91,7 +93,7 @@ def parse_args():
 	parser.add_argument('--chan3_preproc', dest='chan3_preproc', action='store_true',help='Use the 3 channel pre-processor')	
 	parser.set_defaults(chan3_preproc=False)
 	parser.add_argument('-sigma_clip_baseline', '--sigma_clip_baseline', dest='sigma_clip_baseline', required=False, type=float, default=0, action='store',help='Lower sigma threshold to be used for clipping pixels below (mean-sigma_low*stddev) in first channel of 3-channel preprocessing (default=0)')
-	parser.add_argument('-nchannels', '--nchannels', dest='nchannels', required=False, type=int, default=-1, action='store',help='Number of channels (if -1=take from data generator). If you modify channels in preprocessing you must set this (default=-1)')
+	parser.add_argument('-nchannels', '--nchannels', dest='nchannels', required=False, type=int, default=1, action='store',help='Number of channels (1=default). If you modify channels in preprocessing you must set this accordingly')
 	
 	#parser.add_argument('--grayimg', dest='grayimg', action='store_true')	
 	#parser.set_defaults(grayimg=False)
@@ -134,8 +136,8 @@ def parse_args():
 	parser.add_argument('--ngpu', required=False,default=1,type=int,metavar="Number of GPUs",help='Number of GPUs')
 	parser.add_argument('--nimg_per_gpu', required=False,default=1,type=int,metavar="Number of images per gpu",help='Number of images per gpu (default=1)')
 	parser.add_argument('--nepochs', required=False,default=1,type=int,metavar="Number of training epochs",help='Number of training epochs (default=1)')
-	parser.add_argument('--epoch_length', required=False,type=int,default=None,metavar="Number of data batches per epoch",help='Number of data batches per epoch. If None, assumed equal to the train sample size.')
-	parser.add_argument('--nvalidation_steps', required=False,default=None,type=int,metavar="Number of validation steps per epoch",help='Number of validation steps per epoch. If None, assumed equal to the cross-validation sample size.')
+	#parser.add_argument('--epoch_length', required=False,type=int,default=None,metavar="Number of data batches per epoch",help='Number of data batches per epoch. If None, assumed equal to the train sample size.')
+	#parser.add_argument('--nvalidation_steps', required=False,default=None,type=int,metavar="Number of validation steps per epoch",help='Number of validation steps per epoch. If None, assumed equal to the cross-validation sample size.')
 	parser.add_argument('--rpn_anchor_scales', dest='rpn_anchor_scales', required=False, type=str, default='4,8,16,32,64',help='RPN anchor scales') 
 	parser.add_argument('--max_gt_instances', dest='max_gt_instances', required=False, type=int, default=300,help='Max GT instances') 
 	parser.add_argument('--backbone', dest='backbone', required=False, type=str, default='resnet101',help='Backbone network {resnet101,resnet50,custom} (default=resnet101)') 
@@ -290,15 +292,14 @@ def main():
 		return 1
 
 	if procId==0:
-		print("Weights: ", args.weights)
 		print("Datalist: ", args.datalist)
-		print("Logs: ", args.logs)
 		print("nEpochs: ", args.nepochs)
-		print("epoch_length: ",args.epoch_length)
-		print("nvalidation_steps: ",args.nvalidation_steps)
+		print("Weights: ", args.weights)
+		#print("epoch_length: ",args.epoch_length)
+		#print("nvalidation_steps: ",args.nvalidation_steps)
 		print("ngpu: ",args.ngpu)
 		print("nimg_per_gpu: ",args.nimg_per_gpu)
-		print("scoreThr: ",args.scoreThr)
+		#print("scoreThr: ",args.scoreThr)
 		print("classdict: ",args.classdict)
 
 	#===========================
@@ -311,17 +312,19 @@ def main():
 		return 1
 	
 	# - Set model options
-	weights_path = args.weights
+	weights_path= None
+	if args.weights!="":
+		weights_path= args.weights
 
 	rpn_anchor_scales= tuple([int(x.strip()) for x in args.rpn_anchor_scales.split(',')])
 	backbone_strides= [int(x.strip()) for x in args.backbone_strides.split(',')]
 	rpn_anchor_ratios= [float(x.strip()) for x in args.rpn_anchor_ratios.split(',')]
 
-	train_from_scratch= False
-	if not weights_path or weights_path=='':
-		train_from_scratch= True
+	#train_from_scratch= False
+	#if not weights_path or weights_path=='':
+	#	train_from_scratch= True
 
-	exclude_first_layer_weights= args.exclude_first_layer_weights
+	#exclude_first_layer_weights= args.exclude_first_layer_weights
 
 	# - Set class label-target dictionary for dataset
 	try:
@@ -329,6 +332,14 @@ def main():
 	except:
 		logger.error("[PROC %d] Failed to convert class dict string to dict!" % (procId))
 		return -1	
+		
+	if 'background' not in class_dict:
+		logger.info("[PROC %d] background class not present in dictionary, adding it and set it to target 0 ..." % (procId))
+		class_dict_tmp= class_dict
+		class_dict= {}
+		class_dict['background']= 0
+		for key, value in class_dict_tmp.items():
+			class_dict[key]= value
 
 	# - Set class label-target dictionary for model
 	#   NB: Add background class if not added
@@ -341,9 +352,13 @@ def main():
 			return -1		
 			
 	if 'background' not in class_dict_model:
-		logger.info("[PROC %d] background class not present in dictionary, adding it and set it to target 0 ..." % (procId)) 
-		class_dict_model['background']= 0	
-
+		logger.info("[PROC %d] background class not present in dictionary, adding it and set it to target 0 ..." % (procId))
+		class_dict_model_tmp= class_dict_model
+		class_dict_model= {}
+		class_dict_model['background']= 0
+		for key, value in class_dict_model_tmp.items():
+			class_dict_model[key]= value
+			
 	
 	# - Compute class names
 	nclasses= len(class_dict)
@@ -355,10 +370,12 @@ def main():
 		logger.info("[PROC %d] Assuming #%d classes in dataset from given class dictionary ..." % (procId, nclasses))
 		print("CLASS_NAMES (DATASET)")
 		print(class_names)
+		print(class_dict)
 	
 		logger.info("[PROC %d] Assuming #%d classes in model from given class dictionary ..." % (procId, nclasses_model))
 		print("CLASS_NAMES (MODEL)")
 		print(class_names_model)
+		print(class_dict_model)
 
 	#loss_weight_dict= {}
 	#loss_weight_dict['rpn_class_loss']= args.rpn_class_loss_weight
@@ -397,35 +414,35 @@ def main():
 	#==============================
 	preprocess_stages= []
 
-	if subtract_bkg:
-		preprocess_stages.append(BkgSubtractor(sigma=sigma_bkg, use_mask_box=use_box_mask_in_bkg, mask_fract=bkg_box_mask_fract, chid=bkg_chid))
+	if args.subtract_bkg:
+		preprocess_stages.append(BkgSubtractor(sigma=args.sigma_bkg, use_mask_box=args.use_box_mask_in_bkg, mask_fract=args.bkg_box_mask_fract, chid=args.bkg_chid))
 
-	if clip_shift_data:
-		preprocess_stages.append(SigmaClipShifter(sigma=sigma_clip, chid=clip_chid))
+	if args.clip_shift_data:
+		preprocess_stages.append(SigmaClipShifter(sigma=args.sigma_clip, chid=args.clip_chid))
 
-	if clip_data:
-		preprocess_stages.append(SigmaClipper(sigma_low=sigma_clip_low, sigma_up=sigma_clip_up, chid=clip_chid))
+	if args.clip_data:
+		preprocess_stages.append(SigmaClipper(sigma_low=args.sigma_clip_low, sigma_up=args.sigma_clip_up, chid=args.clip_chid))
 
-	if zscale_stretch:
+	if args.zscale_stretch:
 		preprocess_stages.append(ZScaleTransformer(contrasts=zscale_contrasts))
 
-	if chan3_preproc:
-		preprocess_stages.append( Chan3Trasformer(sigma_clip_baseline=sigma_clip_baseline, sigma_clip_low=sigma_clip_low, sigma_clip_up=sigma_clip_up, zscale_contrast=zscale_contrasts[0]) )
+	if args.chan3_preproc:
+		preprocess_stages.append( Chan3Trasformer(sigma_clip_baseline=args.sigma_clip_baseline, sigma_clip_low=args.sigma_clip_low, sigma_clip_up=args.sigma_clip_up, zscale_contrast=zscale_contrasts[0]) )
 
-	if resize:
-		preprocess_stages.append(Resizer(resize_size=resize_size, upscale=upscale, downscale_with_antialiasing=downscale_with_antialiasing, set_pad_val_to_min=set_pad_val_to_min))
+	#if resize:
+	#	preprocess_stages.append(Resizer(resize_size=args.imgsize, upscale=upscale, downscale_with_antialiasing=downscale_with_antialiasing, set_pad_val_to_min=set_pad_val_to_min))
 
-	if normalize_minmax:
-		preprocess_stages.append(MinMaxNormalizer(norm_min=norm_min, norm_max=norm_max))
+	if args.normalize_minmax:
+		preprocess_stages.append(MinMaxNormalizer(norm_min=args.norm_min, norm_max=args.norm_max))
 
 	logger.info("[PROC %d] Data pre-processing steps: %s" % (procId, str(preprocess_stages)))
-	#print(preprocess_stages)
+	
+	dp= None
+	if not preprocess_stages:
+		logger.warn("No pre-processing steps defined ...")
+	else:
+		dp= DataPreprocessor(preprocess_stages)
 
-	dp= DataPreprocessor(preprocess_stages)
-
-	# - Creating data pre-processor for validation/test data
-	#logger.info("Creating data pre-processor for validation/test data ...")
-	#dp_val= DataPreprocessor(preprocess_stages_val)
 	
 	#==============================
 	#==   DEFINE AUGMENTER
@@ -435,75 +452,6 @@ def main():
 		logger.info("[PROC %d] Setting augmenter %s ..." % (procId, args.augmenter))
 		augmenter= Augmenter(augmenter_choice=args.augmenter)
 		
-	#==============================
-	#==   LOAD DATASETS
-	#==============================
-	# - Loading train/test dataset
-	logger.info("[PROC %d] Creating train/test dataset ..." % (procId))
-	dataset= Dataset(
-		preprocess_transform=dp,
-		augmentation=augmenter,
-		**CONFIG
-	)
-	dataset.set_class_dict(class_dict)
-	
-	logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
-		
-	dataset.load_data_from_json_list(args.datalist, args.maxnimgs)
-	
-	# - Loading validation dataset (if enabled)
-	dataset_cv= None
-	if args.datalist_val!="":
-		logger.info("[PROC %d] Creating validation dataset ..." % (procId))
-	
-		dataset_cv= Dataset(
-			preprocess_transform=dp,
-			augmentation=None,
-			**CONFIG
-		)
-		dataset_cv.set_class_dict(class_dict)
-	
-		logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
-		dataset_cv.load_data_from_json_list(args.datalist_val, args.maxnimgs)
-	
-	#if args.command == "train":
-	#	if procId==0:
-	#		logger.info("[PROC %d] Creating/setting & loading train/val datasets ..." % procId)
-		#datasets= create_train_val_datasets(args)
-		#if len(datasets)!=2:
-		#	logger.error("[PROC %d] Failed to create train/val datasets!" % procId)
-		#	return 1
-
-	#elif args.command == "test":
-	#	if procId==0:
-	#		logger.info("[PROC %d] Creating/setting & loading test dataset ..." % procId)
-	#	dataset= create_test_dataset(args)
-	#	if dataset is None:
-	#		logger.error("[PROC %d] Failed to create test dataset!" % procId)
-	#		return 1
-
-	# - Updating steps per epoch
-	#if args.command == "train":
-	#	nentries_train= datasets[0].loaded_imgs
-	#	nentries_val= datasets[1].loaded_imgs
-	#	epoch_step_info_given= ( (args.epoch_length is not None) and (args.epoch_length>0) )
-	#	val_step_info_given= ( (args.nvalidation_steps is not None) and (args.nvalidation_steps>0) )
-
-	#	if epoch_step_info_given and val_step_info_given:
-	#		steps_per_epoch= ((args.epoch_length - args.nvalidation_steps) // (args.nimg_per_gpu*args.ngpu))
-	#		validation_steps_per_epoch= max(1, args.nvalidation_steps // (args.nimg_per_gpu*args.ngpu))
-
-	#	else:
-	#		steps_per_epoch= (nentries_train // (args.nimg_per_gpu*args.ngpu))
-	#		validation_steps_per_epoch= max(1, nentries_val // (args.nimg_per_gpu*args.ngpu))
-
-	#	if procId==0:
-	#		logger.info("[PROC %d] Train/validation steps per epoch= %d/%d" % (procId,steps_per_epoch,validation_steps_per_epoch))
-
-	#elif args.command == "test":
-	#	steps_per_epoch= 1
-	#	validation_steps_per_epoch= 1
-
 	
 	#===========================
 	#==   CONFIG
@@ -533,9 +481,7 @@ def main():
 	CONFIG['loss_weights']= loss_weights
 	CONFIG['image_min_dim']= args.imgsize
 	CONFIG['image_max_dim']= args.imgsize
-	CONFIG['image_shape']= ([args.imgsize, args.imgsize, 3])
-	if args.grayimg:
-		CONFIG['image_shape']= ([args.imgsize, args.imgsize, 1])
+	CONFIG['image_shape']= ([args.imgsize, args.imgsize, args.nchannels])
 
 	if args.command == "train":
 		CONFIG['training']= True
@@ -584,20 +530,103 @@ def main():
 	
 	logger.info("Config options: %s" % (str(CONFIG)))
 
+	#==============================
+	#==   LOAD DATASETS
+	#==============================
+	# - Loading train/test dataset
+	logger.info("[PROC %d] Creating train/test dataset ..." % (procId))
+	dataset= Dataset(
+		preprocessor=dp,
+		augmenter=augmenter,
+		**CONFIG
+	)
+	dataset.set_class_dict(class_dict)
+	
+	logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
+		
+	dataset.load_data_from_json_list(args.datalist, args.maxnimgs)
+	
+	# - Loading validation dataset (if enabled)
+	dataset_cv= None
+	if args.datalist_val!="":
+		logger.info("[PROC %d] Creating validation dataset ..." % (procId))
+	
+		dataset_cv= Dataset(
+			preprocessor=dp,
+			augmenter=None,
+			**CONFIG
+		)
+		dataset_cv.set_class_dict(class_dict)
+	
+		logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
+		dataset_cv.load_data_from_json_list(args.datalist_val, args.maxnimgs)
+	
+	#if args.command == "train":
+	#	if procId==0:
+	#		logger.info("[PROC %d] Creating/setting & loading train/val datasets ..." % procId)
+		#datasets= create_train_val_datasets(args)
+		#if len(datasets)!=2:
+		#	logger.error("[PROC %d] Failed to create train/val datasets!" % procId)
+		#	return 1
+
+	#elif args.command == "test":
+	#	if procId==0:
+	#		logger.info("[PROC %d] Creating/setting & loading test dataset ..." % procId)
+	#	dataset= create_test_dataset(args)
+	#	if dataset is None:
+	#		logger.error("[PROC %d] Failed to create test dataset!" % procId)
+	#		return 1
+
+	# - Updating steps per epoch
+	#if args.command == "train":
+	#	nentries_train= datasets[0].loaded_imgs
+	#	nentries_val= datasets[1].loaded_imgs
+	#	epoch_step_info_given= ( (args.epoch_length is not None) and (args.epoch_length>0) )
+	#	val_step_info_given= ( (args.nvalidation_steps is not None) and (args.nvalidation_steps>0) )
+
+	#	if epoch_step_info_given and val_step_info_given:
+	#		steps_per_epoch= ((args.epoch_length - args.nvalidation_steps) // (args.nimg_per_gpu*args.ngpu))
+	#		validation_steps_per_epoch= max(1, args.nvalidation_steps // (args.nimg_per_gpu*args.ngpu))
+
+	#	else:
+	#		steps_per_epoch= (nentries_train // (args.nimg_per_gpu*args.ngpu))
+	#		validation_steps_per_epoch= max(1, nentries_val // (args.nimg_per_gpu*args.ngpu))
+
+	#	if procId==0:
+	#		logger.info("[PROC %d] Train/validation steps per epoch= %d/%d" % (procId,steps_per_epoch,validation_steps_per_epoch))
+
+	#elif args.command == "test":
+	#	steps_per_epoch= 1
+	#	validation_steps_per_epoch= 1
+
 	#===========================
 	#==   CREATE MODEL
 	#===========================
-	# - Create model
-	#if args.command == "train":
-	#	model = modellib.MaskRCNN(mode="training", config=config, model_dir=args.logs)
+	
+	if args.command == "train":
+		# - Creating the model
+		logger.info("Creating mrcnn model ...")
+		model= mask_rcnn_functional(config=CONFIG)
+		
+		if procId==0:
+			logger.info("[PROC %d] Printing the model ..." % procId)
+			model.summary()
+	
+		# - Training model
+		logger.info("Training model ...")
+		train_model(model, 
+			train_dataset=dataset,
+			val_dataset=dataset_cv,
+			config=CONFIG, 
+			weights_path=weights_path
+		)
+            
 	#elif args.command == "test" or args.command == "detect":
 	#	DEVICE = "/cpu:0"  # /cpu:0 or /gpu:0
 	#	with tf.device(DEVICE):
 	#		model = modellib.MaskRCNN(mode="inference", config=config, model_dir=args.logs)
 
-	#if procId==0:
-	#	logger.info("[PROC %d] Printing the model ..." % procId)
-	#	model.print_model()
+	
 
 	# - Load weights
 	#if train_from_scratch:
