@@ -459,15 +459,15 @@ class Augmenter(object):
 			self.augmenter= augmenter
 			
 		# - Define safe augmenters for masks
-		MASK_AUGMENTERS = ["Sequential", "SomeOf", "OneOf", "Sometimes", "Fliplr", "Flipud", "CropAndPad", "Affine", "PiecewiseAffine"]
+		self.MASK_AUGMENTERS = ["Sequential", "SomeOf", "OneOf", "Sometimes", "Fliplr", "Flipud", "CropAndPad", "Affine", "PiecewiseAffine"]
 		
 
-	def hook(images, augmenter, parents, default):
+	def hook(self, images, augmenter, parents, default):
 		"""Determines which augmenters to apply to masks."""
 		# Augmenters that are safe to apply to masks
 		# Some, such as Affine, have settings that make them unsafe, so always
 		# test your augmentation on masks        
-		return augmenter.__class__.__name__ in MASK_AUGMENTERS	
+		return augmenter.__class__.__name__ in self.MASK_AUGMENTERS	
 
 	######################################
 	##     DEFINE PREDEFINED AUGMENTERS
@@ -497,7 +497,7 @@ class Augmenter(object):
 		)
 		
 		# - Define augmenter v3
-		zscaleStretch_aug= ZScaleAugmenter(contrast=0.25, random_contrast=True, random_contrast_per_ch=False, contrast_min=0.1, contrast_max=0.5)
+		zscaleStretch_aug= ZScaleAugmenter(contrast=0.25, random_contrast=True, random_contrast_per_ch=False, contrast_min=0.25, contrast_max=0.5)
 		sigmoidStretch_aug= SigmoidStretchAugmenter(cutoff=0.5, gain=10, random_gain=True, random_gain_per_ch=False, gain_min=10, gain_max=30)
 		percThr_aug= PercentileThrAugmenter(percentile=50, random_percentile=True, random_percentile_per_ch=False, percentile_min=40, percentile_max=60)
 		

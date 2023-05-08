@@ -29,8 +29,8 @@ from tensorflow import cast
 from tensorflow.keras.utils import Sequence
 
 # - Import mrcnn modules
-import utils
-import addon_utils
+from mrcnn import utils
+from mrcnn import addon_utils
 
 
 ##############################

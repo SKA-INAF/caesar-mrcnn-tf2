@@ -2,9 +2,9 @@ import functools
 import keras
 import keras_applications as ka
 
-import resnet_models as rn
-import senet_models as sn
-import resnext_models as rx
+from mrcnn import resnet_models as rn
+from mrcnn import senet_models as sn
+from mrcnn import resnext_models as rx
 
 
 class ModelsFactory:

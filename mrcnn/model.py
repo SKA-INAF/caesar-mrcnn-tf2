@@ -2,9 +2,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers as tfl
 
-import utils
-import losses
-import mrcnn_layers as mrcnnl
+from mrcnn import utils
+from mrcnn import losses
+from mrcnn import mrcnn_layers as mrcnnl
 
 
 class MaskRCNN(tf.keras.Model):

@@ -1,10 +1,13 @@
+# - STANDARD MODULES
 import re
 
 import efficientnet.keras as efn
 import numpy as np
 import tensorflow as tf
-from common import utils
-from layers.backbones.models_factory import Classifiers
+
+# - USER MODULES
+from mrcnn import utils
+from mrcnn.models_factory import Classifiers
 from tensorflow.keras import layers as tfl
 
 

@@ -39,6 +39,8 @@ import regions
 import fitsio
 from fitsio import FITS, FITSHDR
 
+import scipy
+
 ##############################
 ##     GLOBAL VARS
 ##############################

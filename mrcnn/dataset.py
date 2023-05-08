@@ -24,9 +24,10 @@ import warnings
 from typing import Tuple
 import uuid
 
+
 ## USER MODULES
-import mrcnn.utils
-import mrcnn.addon_utils
+from mrcnn import utils
+from mrcnn import addon_utils
 
 
 ##############################
@@ -90,7 +91,26 @@ class Dataset:
 	# ================================================================
 	# ==   SET PROPERTIES
 	# ================================================================
-	def set_class_dict(self, class_dict_str):
+	def set_class_dict(self, class_dict):
+		""" Set class dictionary """
+		
+		# - Check
+		if not class_dict:
+			logger.error("Empty dictionary given!")
+			return -1
+	
+		self.classes_dict= class_dict
+		
+		# - Set number of classes
+		self.nclasses= len(self.classes_dict)
+		self.class_values = list(self.classes_dict.values())
+		
+		logger.info("classes_dict=%s, nclasses=%d" % (str(self.classes_dict), self.nclasses))
+	
+		return 0
+		
+	
+	def set_class_dict_from_str(self, class_dict_str):
 		""" Set class dictionary from json string """
 
 		# - Check
@@ -242,8 +262,10 @@ class Dataset:
 
 		# - Count number of objects per class
 		for class_id in class_ids:
+			if class_id not in self.nobjs_per_class:
+				self.nobjs_per_class[class_id]= 0
 			self.nobjs_per_class[class_id]+= 1
-	
+			
 		return 0
 		
 	# ================================================================
@@ -259,7 +281,7 @@ class Dataset:
 		with open(filelist,'r') as f:
 			for filename in f:
 				filename = filename.strip()
-				logger.info("Loading dataset info from file %s ..." % (filename))
+				logger.debug("Loading dataset info from file %s ..." % (filename))
 
 				# - Check if absolute path
 				rootdir= ''
@@ -284,6 +306,8 @@ class Dataset:
 			logger.error("All files in list have been skipped!")		
 			return -1
 		logger.info("#%d images added in dataset..." % img_counter)
+		logger.info("#objs per class: %s" % (str(self.nobjs_per_class)))
+	
 
 		return 0
 
@@ -293,7 +317,10 @@ class Dataset:
 	def load_image(self, image_id: int) -> np.ndarray:
 		""" Read image from disk """
 		
+		# - Read image
 		filename= self.image_info[image_id]['path']
+		logger.info("Reading image %s ..." % (filename))
+		
 		res= addon_utils.read_fits(filename, strip_deg_axis=True)
 		if res is None:
 			logger.error("Failed to read image %s (id=%d) (see logs)!" % (filename, image_id))
@@ -302,6 +329,12 @@ class Dataset:
 		image= res[0]
 		#header= res[1]
 		#wcs= res[2]
+		
+		# - Replace NANs with zeros
+		image[~np.isfinite(image)]= 0
+		
+		# - Convert from 2D to 3D (add channel axis)
+		image= np.expand_dims(image, axis=-1)
 		
 		return image
 		
@@ -326,6 +359,7 @@ class Dataset:
 		counter= 0
 
 		for filename in filenames:
+			logger.info("Reading mask file %s ..." % (filename))
 			res= addon_utils.read_fits(filename, strip_deg_axis=True)
 			if res is None:
 				logger.error("Failed to read mask file %s!" % (filename))
@@ -338,6 +372,8 @@ class Dataset:
 				mask = np.zeros([height,width,nobjs], dtype=np.bool)
 			mask[:,:,counter]= data
 			counter+= 1
+
+		#print("mask.shape=%s" % (str(mask.shape)))
 
 		class_ids_array= np.full([mask.shape[-1]], class_ids, dtype=np.int32)
 		#class_ids_array= np.array(class_ids, dtype=np.int32)
@@ -360,25 +396,28 @@ class Dataset:
 		"""
         
 		# - Read image 
-		logger.debug("Read image ...")    
+		logger.info("Read image at index %d ..." % (idx))    
 		image= self.load_image(idx)
-		if original_image is None:
+		if image is None:
 			logger.error("Failed to load image id %d!" % (idx))
 			return None
 			
 		original_image= np.copy(image)
 		original_image_shape = original_image.shape
+		
+		#print(np.isfinite(image))
+		#print("image.shape=%s" % (str(image.shape)))
 
 		# - Apply pre-processing?
 		if self.preprocessor is not None:
-			logger.debug("Apply pre-processing ...")
+			logger.info("Apply pre-processing to image at index %d ..." % (idx))
 			image= self.preprocessor(original_image)
 			if image is None:
 				logger.error("Failed to pre-process source image data at index %d (sname=%s, label=%s, classid=%s)!" % (index, sname, str(label), str(classid)))
 				return None
 				
 		# - Read masks
-		logger.debug("Read masks ...")
+		logger.info("Read masks at index %d ..." % (idx))
 		res= self.load_mask(idx)
 		if res is None:
 			logger.error("Failed to load mask image id %d!" % (idx))
@@ -388,7 +427,7 @@ class Dataset:
 		class_ids_array= res[1]
 		
 		# - Resize images
-		logger.debug("Resize images ...")
+		logger.info("Resize images at index %d (min_dim=%d, max_dim=%d, min_scale=%d, mode=%s) ..." % (idx, self.kwargs['image_min_dim'], self.kwargs['image_max_dim'], self.kwargs['image_min_scale'], self.kwargs['image_resize_mode']))
 		image, window, scale, padding, crop = utils.resize_image(
 			image,
 			min_dim=self.kwargs['image_min_dim'],
@@ -398,15 +437,16 @@ class Dataset:
 		)
 
 		# - Resize masks
-		logger.debug("Resize masks ...")
-		masks_array = self.resize_mask(original_masks_array, scale, padding, crop)
+		logger.info("Resize masks at index %d ..." % (idx))
+		masks_array = addon_utils.resize_mask(original_masks_array, scale, padding, crop)
 
 		# - Apply augmentation
 		_image_shape = image.shape
 
 		if self.augmenter:
+			logger.info("Apply augmentation ...")
 			masks_list = [masks_array[:, :, i].astype('float') for i in range(masks_array.shape[2])]
-			transformed = self.augmenter(image=image, masks=masks_list)
+			transformed = self.augmenter(data=image, masks=masks_list)
 			if transformed is None:
 				logger.error("Failed to apply augmentation to images & masks!")
 				return None
@@ -430,11 +470,13 @@ class Dataset:
 		original_class_ids = class_ids_array[_orig_idx]
 
 		# - Compute bboxes
+		logger.info("Computing bounding boxes ...")
 		bboxes = utils.extract_bboxes(proc_masks)
 		original_bboxes = utils.extract_bboxes(original_masks_array)
 
 		# - Active classes
 		#   Different datasets have different classes, so track the classes supported in the dataset of this image.
+		logger.info("Computing active classes ...")
 		active_class_ids = np.zeros([len(self.classes_dict.keys())], dtype=np.int32)
 
 		# 1 for classes that are in the dataset of the image
@@ -448,6 +490,7 @@ class Dataset:
 			proc_masks = utils.minimize_mask(bboxes, proc_masks, self.kwargs['mini_mask_shape'])
 
 		# - Image meta data
+		logger.info("Computing image metadata ...")
 		image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
 
 		return proc_image, proc_masks, proc_class_ids, bboxes, image_meta, \

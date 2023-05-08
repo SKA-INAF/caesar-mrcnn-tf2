@@ -14,8 +14,8 @@ import os
 import tensorflow as tf
 
 ## USER MODULES
-import losses
-from .data_loader import DataLoader
+from mrcnn import losses
+from mrcnn.data_loader import DataLoader
 
 ##############################
 ##     GLOBAL VARS
