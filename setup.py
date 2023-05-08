@@ -44,7 +44,7 @@ reqs.append('cython')
 reqs.append('mpi4py')
 reqs.append('tensorflow')
 reqs.append('image-classifiers')
-
+reqs.append('efficientnet')
 
 data_dir = 'data'
 

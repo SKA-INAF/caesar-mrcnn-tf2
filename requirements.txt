@@ -19,3 +19,4 @@ cython
 mpi4py
 tensorflow
 image-classifiers
+efficientnet
