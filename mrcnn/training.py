@@ -118,7 +118,7 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
     # Load weights for MaskRCNN created previously during training.
     bbone = config['backbone']
     tboard_model_folder = f"maskrcnn_{bbone}_" + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    tensorboard_logdir = os.path.join('..', 'logs', 'scalars', tboard_model_folder)
+    tensorboard_logdir = os.path.join(os.getcwd(), 'logs', 'scalars', tboard_model_folder)
     initial_epoch = 0
     if weights_path:
         model.load_weights(weights_path)
