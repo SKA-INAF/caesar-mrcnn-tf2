@@ -1,7 +1,8 @@
 import collections
 import os
 
-import keras
+#import keras
+import tensorflow.keras as keras
 from classification_models import get_submodules_from_kwargs
 from classification_models.models._common_blocks import GroupConv2D, ChannelSE
 from classification_models.weights import load_model_weights
