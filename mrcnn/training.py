@@ -12,6 +12,10 @@ import os
 
 ## TF MODULES
 import tensorflow as tf
+try:
+	from tensorflow.keras.utils import plot_model
+except:
+	from tensorflow.keras.utils.vis_utils import plot_model
 
 ## USER MODULES
 from mrcnn import losses
@@ -164,6 +168,27 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
               workers=config['workers'],
               max_queue_size=int(config['queue_multiplier'] * config['batch_size']),
               )
+
+    #===========================
+    #==   SAVE MODEL
+    #===========================
+    # - Save the model weights
+    logger.info("Saving model weights ...")
+    model.save_weights('model_weights.h5')
+		
+    # - Save the model architecture in json format
+    logger.info("Saving model architecture in json format ...")
+    with open('model_architecture.json', 'w') as f:
+      f.write(model.to_json())
+
+    # - Save the model
+    logger.info("Saving full model ...")
+    model.save('model.h5')
+		
+    # - Save the network architecture diagram
+    logger.info("Saving model architecture to file ...")
+    plot_model(model, to_file='model.png', show_shapes=True)
+
 
 
 def get_optimizer(kwargs):
