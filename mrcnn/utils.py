@@ -16,6 +16,8 @@ import skimage
 import skimage.transform
 import tensorflow as tf
 
+import matplotlib.pyplot as plt
+
 
 ############################################################
 #  Bounding Boxes
@@ -970,12 +972,27 @@ def minimize_mask(bbox, mask, mini_shape):
     mini_mask = np.zeros(mini_shape + (mask.shape[-1],), dtype=bool)
     for i in range(mask.shape[-1]):
         m = mask[:, :, i]
+        #print("original mask")
+        #plt.imshow(m)
+        #plt.show()
         y1, x1, y2, x2 = bbox[i][:4]
         m = m[y1:y2, x1:x2]
+        #print("mask")
+        #plt.imshow(m)
+        #plt.show()
         if m.size == 0:
             raise Exception("Invalid bounding box with area of zero")
         m = skimage.transform.resize(m.astype(float), mini_shape)
-        mini_mask[:, :, i] = np.where(m >= 128, 1, 0)
+        #print("resized mask")
+        #plt.imshow(m)
+        #plt.show()
+        
+        #mini_mask[:, :, i] = np.where(m >= 128, 1, 0) ## ORIGINAL CODE (BUGGY?)
+        mini_mask[:, :, i] = np.where(m >= 0.5, 1, 0)
+        #print("resized mask cut")
+        #plt.imshow(mini_mask[:,:,i])
+        #plt.show()
+        
     return mini_mask
 
 

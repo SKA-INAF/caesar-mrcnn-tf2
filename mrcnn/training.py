@@ -193,3 +193,31 @@ def get_optimizer(kwargs):
     else:
         raise NotImplementedError('Only sgd, adam, adamax, adadelta, adagrad, rmsprop, ftrl optimizers are added.')
     return optimizer
+    
+def get_legacy_optimizer(kwargs):
+    """
+    Select necessary optimizer.
+    Args:
+        kwargs: dict for a specific model optimizer
+
+    Returns: Optimizer class from tf.keras.optimizers
+
+    """
+    opt_name = kwargs['name'].lower()
+    if opt_name == 'adam':
+        optimizer = tf.keras.optimizers.legacy.Adam(**kwargs)
+    elif opt_name == 'adamax':
+        optimizer = tf.keras.optimizers.legacy.Adamax(**kwargs)
+    elif opt_name == 'adadelta':
+        optimizer = tf.keras.optimizers.legacy.Adadelta(**kwargs)
+    elif opt_name == 'adagrad':
+        optimizer = tf.keras.optimizers.legacy.Adagrad(**kwargs)
+    elif opt_name == 'sgd':
+        optimizer = tf.keras.optimizers.legacy.SGD(**kwargs)
+    elif opt_name == 'rmsprop':
+        optimizer = tf.keras.optimizers.legacy.RMSprop(**kwargs)
+    elif opt_name == 'ftrl':
+        optimizer = tf.keras.optimizers.legacy.Ftrl(**kwargs)
+    else:
+        raise NotImplementedError('Only sgd, adam, adamax, adadelta, adagrad, rmsprop, ftrl optimizers are added.')
+    return optimizer

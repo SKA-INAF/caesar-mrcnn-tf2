@@ -24,6 +24,7 @@ import warnings
 from typing import Tuple
 import uuid
 
+import matplotlib.pyplot as plt
 
 ## USER MODULES
 from mrcnn import utils
@@ -65,8 +66,11 @@ class Dataset:
 		
 		# - Init variables
 		self.loaded_imgs= 0
+		self.image_ids= []
 		self.nobjs_per_class= {}
 		self.image_info = []
+		self.class_names= []
+		self.consider_sources_near_mixed_sidelobes= True
 				
 		# - Get class indexes from class_dict
 		self.classes_dict = self.kwargs['class_dict']
@@ -136,6 +140,49 @@ class Dataset:
 		logger.debug("classes_dict=%s, nclasses=%d" % (str(self.classes_dict), self.nclasses))
 	
 		return 0
+		
+	# ================================================================
+	# ==   GET IMAGE PATH
+	# ================================================================
+	def image_reference(self, image_id):
+		""" Return the path of the image."""
+
+		return self.image_info[image_id]['path']
+		
+	# ================================================================
+	# ==   GET IMAGE UUID
+	# ================================================================
+	def image_uuid(self, image_id):
+		""" Return the uuid of the image."""
+
+		return self.image_info[image_id]['id']
+
+	# ================================================================
+	# ==   GET IMAGE METADATA
+	# ================================================================
+	def image_metadata(self, image_id):
+		""" Return the image metadata of the image."""
+
+		if 'metadata' not in self.image_info[image_id]:
+			logger.warn("No metadata stored in image info (hint: available only in json input data reading), returning empty dict!")
+			return {}
+		return self.image_info[image_id]['metadata']
+		
+	# ================================================================
+	# ==   LOAD GT OBJ INFO
+	# ================================================================
+	def load_gt_obj_info(self, image_id):
+		""" Load gt object info (available only in json data input) """
+
+		objs= []
+		info = self.image_info[image_id]
+		if 'objs' not in info:
+			logger.warn("objs key not present in image info (NB: avalilable only in json input data reading), returnin empty list!")
+			return objs
+		
+		objs= info["objs"]
+
+		return objs
 
 	# ================================================================
 	# ==   ADD/LOAD IMAGE
@@ -266,6 +313,7 @@ class Dataset:
 				self.nobjs_per_class[class_id]= 0
 			self.nobjs_per_class[class_id]+= 1
 			
+			
 		return 0
 		
 	# ================================================================
@@ -305,9 +353,13 @@ class Dataset:
 		if img_counter<=0:
 			logger.error("All files in list have been skipped!")		
 			return -1
+			
 		logger.info("#%d images added in dataset..." % img_counter)
 		logger.info("#objs per class: %s" % (str(self.nobjs_per_class)))
-	
+		
+		# - Set vars
+		self.image_ids= np.arange(self.loaded_imgs)
+		self.class_names = [key for key in self.classes_dict]
 
 		return 0
 
@@ -336,7 +388,76 @@ class Dataset:
 		# - Convert from 2D to 3D (add channel axis)
 		image= np.expand_dims(image, axis=-1)
 		
+
 		return image
+		
+		
+	def load_and_process_image(self, image_id, preprocess=True, resize=True):
+		""" Read image and process it """
+		
+		# - Read image	
+		image= self.load_image(image_id)
+		original_input_shape= image.shape
+		
+		# - Apply pre-processing
+		if preprocess:
+			image= self.preprocessor(image)
+
+		# - Resize image
+		if resize:
+			image, window, scale, padding, crop = utils.resize_image(
+				image,
+				min_dim=self.kwargs['image_min_dim'],
+				min_scale=self.kwargs['image_min_scale'],
+				max_dim=self.kwargs['image_max_dim'],
+				mode=self.kwargs['image_resize_mode']
+			)	
+			
+    # - Get image meta
+		#image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
+		image_meta = utils.compose_image_meta(
+    	image_id=image_id,
+			original_image_shape=original_input_shape,
+			window=window,
+			scale=scale,
+			active_class_ids=np.zeros([self.kwargs['num_classes']], dtype=np.int32),
+			config=self.kwargs
+		)
+    
+		return image, image_meta, window
+		
+		
+	def process_image(self, image, image_id, preprocess=True, resize=True):
+		""" Read image and process it """
+		
+		# - Read image	
+		original_input_shape= image.shape
+		
+		# - Apply pre-processing
+		if preprocess:
+			image= self.preprocessor(image)
+
+		# - Resize image
+		if resize:
+			image, window, scale, padding, crop = utils.resize_image(
+				image,
+				min_dim=self.kwargs['image_min_dim'],
+				min_scale=self.kwargs['image_min_scale'],
+				max_dim=self.kwargs['image_max_dim'],
+				mode=self.kwargs['image_resize_mode']
+			)	
+			
+    # - Get image meta
+		image_meta = utils.compose_image_meta(
+    	image_id=image_id,
+			original_image_shape=original_input_shape,
+			window=window,
+			scale=scale,
+			active_class_ids=np.zeros([self.kwargs['num_classes']], dtype=np.int32),
+			config=self.kwargs
+		)
+    
+		return image, image_meta, window
 		
 	# ================================================================
 	# ==   LOAD MASK (multiple objects per image)
@@ -371,6 +492,7 @@ class Dataset:
 			if mask is None:
 				mask = np.zeros([height,width,nobjs], dtype=np.bool)
 			mask[:,:,counter]= data
+			
 			counter+= 1
 
 		#print("mask.shape=%s" % (str(mask.shape)))
@@ -426,6 +548,7 @@ class Dataset:
 		original_masks_array= res[0]
 		class_ids_array= res[1]
 		
+		
 		# - Resize images
 		logger.debug("Resize images at index %d (min_dim=%d, max_dim=%d, min_scale=%d, mode=%s) ..." % (idx, self.kwargs['image_min_dim'], self.kwargs['image_max_dim'], self.kwargs['image_min_scale'], self.kwargs['image_resize_mode']))
 		image, window, scale, padding, crop = utils.resize_image(
@@ -439,7 +562,8 @@ class Dataset:
 		# - Resize masks
 		logger.debug("Resize masks at index %d ..." % (idx))
 		masks_array = addon_utils.resize_mask(original_masks_array, scale, padding, crop)
-
+		
+		
 		# - Apply augmentation
 		_image_shape = image.shape
 
@@ -458,13 +582,14 @@ class Dataset:
 		else:
 			proc_image = image
 			proc_masks = masks_array
-
+			
+		
 		# - Note that some boxes might be all zeros if the corresponding mask got cropped out.
 		#   and here is to filter them out
 		_idx = np.sum(proc_masks, axis=(0, 1)) > 0
 		proc_masks = proc_masks[:, :, _idx]
 		proc_class_ids = class_ids_array[_idx]
-
+		
 		_orig_idx = np.sum(original_masks_array, axis=(0, 1)) > 0
 		original_masks_array = original_masks_array[:, :, _orig_idx]
 		original_class_ids = class_ids_array[_orig_idx]
@@ -489,6 +614,7 @@ class Dataset:
 		if self.kwargs['use_mini_masks']:
 			proc_masks = utils.minimize_mask(bboxes, proc_masks, self.kwargs['mini_mask_shape'])
 
+		
 		# - Image meta data
 		logger.debug("Computing image metadata ...")
 		image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)

@@ -42,9 +42,10 @@ CONFIG = {
 
     # If enabled, resizes instance masks to a smaller size to reduce memory load.\
     # Recommended when using high-resolution images.
+    # NB: When mini mask is enabled, mask are all empty!!! Disable for the moment!
     #'use_mini_masks': False,
     #'mini_mask_shape': (32, 32),
-    'use_mini_masks': True,
+    'use_mini_masks': False,
     'mini_mask_shape': (56, 56),
 
     # Shape of output mask

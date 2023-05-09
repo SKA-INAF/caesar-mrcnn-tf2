@@ -505,8 +505,7 @@ class Augmenter(object):
 			[
 				zscaleStretch_aug,	
 				iaa.OneOf([iaa.Fliplr(1.0), iaa.Flipud(1.0), iaa.Noop()]),
-  			iaa.Affine(rotate=(-90, 90), mode='constant', cval=0.0)
-  			#iaa.Affine(translate_percent={"x": (-0.3, 0.3), "y": (-0.3, 0.3)}, mode='constant', cval=0.0)
+  			iaa.OneOf([iaa.Rot90((1,3)), iaa.Noop()]), # rotate by 90, 180 or 270 or do nothing
 			]
 		)
 
