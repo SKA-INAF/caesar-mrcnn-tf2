@@ -30,6 +30,8 @@ from mrcnn.preprocessing import ChanResizer, ZScaleTransformer, Chan3Trasformer
 from mrcnn.augmentation import Augmenter
 from mrcnn.training import train_model
 from mrcnn.model import mask_rcnn_functional
+from mrcnn.evaluation import ModelTester
+from mrcnn import inference_utils
 
 #===========================
 #==   IMPORT MPI
@@ -268,6 +270,46 @@ def validate_args(args):
 			return -1
 
 	return 0
+	
+	
+############################################################
+#        TEST
+############################################################
+def test(args, model, config, dataset):
+	""" Test the model on input dataset with ground truth knowledge """  
+
+	# - Check inputs
+	if dataset is None:
+		logger.error("Input dataset is None!")
+		return -1
+	if model is None:
+		logger.error("Input model is None!")
+		return -1
+	if config is None:
+		logger.error("Input configuration is None!")
+		return -1
+	
+	# - Set options
+	classid_remap_dict= {}
+	if args.remap_classids:
+		try:
+			classid_remap_dict= ast.literal_eval(args.classid_remap_dict)
+		except:
+			logger.error("Failed to convert classid remap dict string to dict!")
+			return -1	
+
+	# - Test model on dataset
+	logger.info("Testing model on given dataset ...")
+	tester= ModelTester(model, config, dataset)	
+	tester.score_thr= args.scoreThr
+	tester.iou_thr= args.iouThr
+	tester.n_max_img= args.maxnimgs
+	tester.remap_classids= args.remap_classids 
+	tester.classid_map= classid_remap_dict
+
+	tester.test()
+
+	return 0
 
 ############################################################
 #       MAIN
@@ -410,7 +452,7 @@ def main():
 
 	#mask_loss_function = args.mask_loss_function
 
-	consider_sources_near_mixed_sidelobes = args.consider_sources_near_mixed_sidelobes
+	#consider_sources_near_mixed_sidelobes = args.consider_sources_near_mixed_sidelobes
 
 
 	#==============================
@@ -495,7 +537,7 @@ def main():
 		CONFIG['training']= False
 		CONFIG['gpu_num']= 1
 		
-	elif args.command == "detect":
+	elif args.command == "inference":
 		CONFIG['training']= False
 		CONFIG['gpu_num']= 1
 	
@@ -545,6 +587,7 @@ def main():
 		**CONFIG
 	)
 	dataset.set_class_dict(class_dict)
+	dataset.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
 	
 	logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		
@@ -561,63 +604,36 @@ def main():
 			**CONFIG
 		)
 		dataset_cv.set_class_dict(class_dict)
+		dataset_cv.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
 	
 		logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		dataset_cv.load_data_from_json_list(args.datalist_val, args.maxnimgs)
-	
-	#if args.command == "train":
-	#	if procId==0:
-	#		logger.info("[PROC %d] Creating/setting & loading train/val datasets ..." % procId)
-		#datasets= create_train_val_datasets(args)
-		#if len(datasets)!=2:
-		#	logger.error("[PROC %d] Failed to create train/val datasets!" % procId)
-		#	return 1
-
-	#elif args.command == "test":
-	#	if procId==0:
-	#		logger.info("[PROC %d] Creating/setting & loading test dataset ..." % procId)
-	#	dataset= create_test_dataset(args)
-	#	if dataset is None:
-	#		logger.error("[PROC %d] Failed to create test dataset!" % procId)
-	#		return 1
-
-	# - Updating steps per epoch
-	#if args.command == "train":
-	#	nentries_train= datasets[0].loaded_imgs
-	#	nentries_val= datasets[1].loaded_imgs
-	#	epoch_step_info_given= ( (args.epoch_length is not None) and (args.epoch_length>0) )
-	#	val_step_info_given= ( (args.nvalidation_steps is not None) and (args.nvalidation_steps>0) )
-
-	#	if epoch_step_info_given and val_step_info_given:
-	#		steps_per_epoch= ((args.epoch_length - args.nvalidation_steps) // (args.nimg_per_gpu*args.ngpu))
-	#		validation_steps_per_epoch= max(1, args.nvalidation_steps // (args.nimg_per_gpu*args.ngpu))
-
-	#	else:
-	#		steps_per_epoch= (nentries_train // (args.nimg_per_gpu*args.ngpu))
-	#		validation_steps_per_epoch= max(1, nentries_val // (args.nimg_per_gpu*args.ngpu))
-
-	#	if procId==0:
-	#		logger.info("[PROC %d] Train/validation steps per epoch= %d/%d" % (procId,steps_per_epoch,validation_steps_per_epoch))
-
-	#elif args.command == "test":
-	#	steps_per_epoch= 1
-	#	validation_steps_per_epoch= 1
 
 	#===========================
 	#==   CREATE MODEL
 	#===========================
-	
-	if args.command == "train":
-		# - Creating the model
-		logger.info("Creating mrcnn model ...")
-		model= mask_rcnn_functional(config=CONFIG)
+	# - Creating the model
+	logger.info("[PROC %d] Creating mrcnn model ..." % procId)
+	model= mask_rcnn_functional(config=CONFIG)
 		
-		if procId==0:
-			logger.info("[PROC %d] Printing the model ..." % procId)
-			model.summary()
-	
-		# - Training model
-		logger.info("Training model ...")
+	if procId==0:
+		logger.info("[PROC %d] Printing the model ..." % procId)
+		model.summary()
+		
+	# - Load model weights
+	if args.command == "test" or args.command == "inference":
+		logger.info("[PROC %d] Load model weights from file %s ..." % (procId, weights_path))
+		model= inference_utils.load_mrcnn_weights(
+			model=model,
+			weights_path=weights_path,
+			verbose=True
+		)
+		
+	#===========================
+	#==   RUN
+	#===========================	
+	if args.command == "train":
+		logger.info("[PROC %d] Training model ..." % (procId))
 		train_model(model, 
 			train_dataset=dataset,
 			val_dataset=dataset_cv,
@@ -625,39 +641,12 @@ def main():
 			weights_path=weights_path
 		)
             
-	#elif args.command == "test" or args.command == "detect":
-	#	DEVICE = "/cpu:0"  # /cpu:0 or /gpu:0
-	#	with tf.device(DEVICE):
-	#		model = modellib.MaskRCNN(mode="inference", config=config, model_dir=args.logs)
-
+	elif args.command == "test":
+		if test(args, model, CONFIG, dataset)<0:
+			logger.error("[PROC %d] Failed to run test!" % (procId))
+			return 1
 	
-
-	# - Load weights
-	#if train_from_scratch:
-	#	if procId==0:
-	#		logger.info("[PROC %d] No weights given, training from scratch ..." % procId)
-	#else:
-	#	if procId==0:
-	#		logger.info("[PROC %d] Loading weights from file %s (excluding first layer? %d) ..." % (procId, weights_path, exclude_first_layer_weights))
-
-	#	if exclude_first_layer_weights:
-	#		model.load_weights(weights_path, by_name=True, exclude='conv1')
-	#	else:
-	#		model.load_weights(weights_path, by_name=True)
-	
-	#===========================
-	#==   TRAIN/TEST
-	#===========================
-	# - Train or evaluate
-	#if args.command == "train":
-	#	if train(args, model, config, datasets)<0:
-	#		logger.error("[PROC %d] Failed to run train!" % procId)
-	#		return 1
-	#elif args.command == "test":
-	#	if test(args, model, config, dataset)<0:
-	#		logger.error("[PROC %d] Failed to run test!" % procId)
-	#		return 1
-	#elif args.command == "detect":
+	#elif args.command == "inference":
 	#	if detect(args, model, config)<0:
 	#		logger.error("[PROC %d] Failed to run detect!" % procId)
 	#		return 1
