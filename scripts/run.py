@@ -14,6 +14,7 @@ import argparse
 import datetime
 import random
 import numpy as np
+import copy
 
 ## TENSORFLOW MODULES
 import tensorflow as tf
@@ -32,6 +33,7 @@ from mrcnn.training import train_model
 from mrcnn.model import mask_rcnn_functional
 from mrcnn.evaluation import ModelTester
 from mrcnn import inference_utils
+from mrcnn.inference_utils import weights_transfer
 
 #===========================
 #==   IMPORT MPI
@@ -529,21 +531,23 @@ def main():
 	CONFIG['image_max_dim']= args.imgsize
 	CONFIG['image_shape']= ([args.imgsize, args.imgsize, args.nchannels])
 
-	if args.command == "train":
-		CONFIG['training']= True
-		CONFIG['gpu_num']= args.ngpu
+	CONFIG['training']= True
+	
+	#if args.command == "train":
+	#	CONFIG['training']= True
+	#	CONFIG['gpu_num']= args.ngpu
 		
-	elif args.command == "test":
-		CONFIG['training']= False
-		CONFIG['gpu_num']= 1
-		#CONFIG['images_per_gpu']= 1
-		#CONFIG['batch_size']= 1
+	#elif args.command == "test":
+	#	CONFIG['training']= False
+	#	CONFIG['gpu_num']= 1
+	#	#CONFIG['images_per_gpu']= 1
+	#	#CONFIG['batch_size']= 1
 		
-	elif args.command == "inference":
-		CONFIG['training']= False
-		CONFIG['gpu_num']= 1
-		#CONFIG['images_per_gpu']= 1
-		#CONFIG['batch_size']= 1
+	#elif args.command == "inference":
+	#	CONFIG['training']= False
+	#	CONFIG['gpu_num']= 1
+	#	#CONFIG['images_per_gpu']= 1
+	#	#CONFIG['batch_size']= 1
 	 	
 	# - Set addon options
 	#config.IMG_PATH= args.image
@@ -578,7 +582,7 @@ def main():
 	#config.OUTFILE_JSON= args.detect_outfile_json
 
 	
-	logger.info("Config options: %s" % (str(CONFIG)))
+	logger.info("[PROC %d] Config options: %s" % (procId, str(CONFIG)))
 
 	#==============================
 	#==   LOAD DATASETS
@@ -625,21 +629,39 @@ def main():
 		model.summary()
 		
 	# - Load model weights
-	if args.command == "test" or args.command == "inference":
-		logger.info("[PROC %d] Load model weights from file %s ..." % (procId, weights_path))
+	if weights_path is not None:
+		logger.info("[PROC %d] Loading model weights from file %s ..." % (procId, weights_path))
 		model= inference_utils.load_mrcnn_weights(
 			model=model,
 			weights_path=weights_path,
 			verbose=True
 		)
+		#model.load_weights(weights_path)
 	
 		# - Set this after load_weights	
-		CONFIG['training']= False
-		CONFIG['gpu_num']= 1
-		CONFIG['images_per_gpu']= 1
-		CONFIG['batch_size']= 1
-		model.config= CONFIG
+		#CONFIG['training']= False
+		#CONFIG['gpu_num']= 1
+		#CONFIG['images_per_gpu']= 1
+		#CONFIG['batch_size']= 1
+		#model.config= CONFIG
 		
+		
+	# - Create model for inference
+	model_inference= None
+	config_inference= copy.deepcopy(CONFIG)
+	config_inference['training']= False
+	config_inference['gpu_num']= 1
+	config_inference['images_per_gpu']= 1
+	config_inference['batch_size']= 1
+		
+	if args.command == "test" or args.command == "inference":
+		# - Create model inference
+		logger.info("[PROC %d] Creating inference model ..." % (procId))
+		model_inference= mask_rcnn_functional(config=config_inference)
+		
+		# - Set weights from train model
+		logger.info("[PROC %d] Setting weights in inference model from train model ..." % (procId))
+		model_inference= weights_transfer(training_graph=model, inference_graph=model_inference, verbose=True)
 		
 	#===========================
 	#==   RUN
@@ -654,8 +676,8 @@ def main():
 		)
             
 	elif args.command == "test":
-		if test(args, model, CONFIG, dataset)<0:
-			logger.error("[PROC %d] Failed to run test!" % (procId))
+		if test(args, model_inference, config_inference, dataset)<0:
+			logger.error("[PROC %d] Failed to run model test!" % (procId))
 			return 1
 	
 	#elif args.command == "inference":
