@@ -404,6 +404,9 @@ class Dataset:
 			image= self.preprocessor(image)
 
 		# - Resize image
+		image_meta= None
+		window= None
+		
 		if resize:
 			image, window, scale, padding, crop = utils.resize_image(
 				image,
@@ -413,16 +416,16 @@ class Dataset:
 				mode=self.kwargs['image_resize_mode']
 			)	
 			
-    # - Get image meta
-		#image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
-		image_meta = utils.compose_image_meta(
-    	image_id=image_id,
-			original_image_shape=original_input_shape,
-			window=window,
-			scale=scale,
-			active_class_ids=np.zeros([self.kwargs['num_classes']], dtype=np.int32),
-			config=self.kwargs
-		)
+    	# - Get image meta
+    	#image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
+			image_meta = utils.compose_image_meta(
+    		image_id=image_id,
+				original_image_shape=original_input_shape,
+				window=window,
+				scale=scale,
+				active_class_ids=np.zeros([self.kwargs['num_classes']], dtype=np.int32),
+				config=self.kwargs
+			)
     
 		return image, image_meta, window
 		

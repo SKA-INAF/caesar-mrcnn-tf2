@@ -208,18 +208,34 @@ def load_mrcnn_weights(model, weights_path, verbose=True):
 
     if config['training']:
         print('\nWeights will be loaded to training graph\n')
-        # Compile training model and load weights
-        optimizer = get_optimizer(config['optimizer_kwargs'])
+        
         losses_dict = {'rpn_class_loss': losses.RPNClassLoss(),
                        'rpn_bbox_loss': losses.RPNBboxLoss(images_per_gpu=config['images_per_gpu']),
                        'mrcnn_class_loss': losses.MRCNNClassLoss(batch_size=config['batch_size']),
                        'mrcnn_bbox_loss': losses.MRCNNBboxLoss(num_classes=config['num_classes']),
                        'mrcnn_mask_loss': losses.MRCNNMaskLoss(),
                        }
-        model.compile(optimizer=optimizer, losses_dict=losses_dict, run_eagerly=True)
-        # Load training model checkpoint
-        model.load_weights(weights_path)
+                       
+        try:
+            # Compile training model and load weights
+            optimizer = get_optimizer(config['optimizer_kwargs'])
+            model.compile(optimizer=optimizer, losses_dict=losses_dict, run_eagerly=True)
+        
+            # Load training model checkpoint
+            model.load_weights(weights_path)
+            
+        except Exception as e:
+            logger.warn("Failed to compile/load model weights (err=%s), trying with legacy optimizers ..." % (str(e)))
+            
+            # Compile training model and load weights
+            optimizer = get_legacy_optimizer(config['optimizer_kwargs'])
+            model.compile(optimizer=optimizer, losses_dict=losses_dict, run_eagerly=True)
+        
+            # Load training model checkpoint
+            model.load_weights(weights_path)
+            
         print(model.summary())
+        
     else:
         print('\nWeights for inference graph will be transferred from training graph\n')
 
@@ -227,7 +243,7 @@ def load_mrcnn_weights(model, weights_path, verbose=True):
         _training_config = config
         _training_config.update({'training': True})
         training_model = mask_rcnn_functional(config=_training_config)
-        # Compile training model and load weights
+        
         losses_dict = {'rpn_class_loss': losses.RPNClassLoss(),
                        'rpn_bbox_loss': losses.RPNBboxLoss(images_per_gpu=config['images_per_gpu']),
                        'mrcnn_class_loss': losses.MRCNNClassLoss(batch_size=config['batch_size']),
@@ -236,6 +252,7 @@ def load_mrcnn_weights(model, weights_path, verbose=True):
                        }
         
         try:
+            # Compile training model and load weights
             optimizer = get_optimizer(config['optimizer_kwargs'])           
             training_model.compile(optimizer=optimizer, losses_dict=losses_dict, run_eagerly=True)
             
@@ -244,6 +261,8 @@ def load_mrcnn_weights(model, weights_path, verbose=True):
         
         except Exception as e:
             logger.warn("Failed to compile/load model weights (err=%s), trying with legacy optimizers ..." % (str(e)))
+            
+            # Compile training model and load weights
             optimizer = get_legacy_optimizer(config['optimizer_kwargs'])           
             training_model.compile(optimizer=optimizer, losses_dict=losses_dict, run_eagerly=True)
         

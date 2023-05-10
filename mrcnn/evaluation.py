@@ -529,7 +529,7 @@ class Analyzer(object):
 
 		# - Load image
 		t1 = time.time()
-		self.image= self.dataset.load_image(self.image_id)
+		self.image, _, _= self.dataset.load_and_process_image(self.image_id, preprocess=True, resize=False)
 		original_input_shape = self.image.shape
 		image_processed, image_meta, window = self.dataset.process_image(self.image, self.image_id, preprocess=True, resize=True)
 		self.image_path_base= os.path.basename(self.image_path)
@@ -576,6 +576,7 @@ class Analyzer(object):
 		print("boxes")
 		print(type(boxes))
 		print(boxes.shape)
+		print(boxes)
 		print("class_ids")
 		print(type(class_ids))
 		print(class_ids.shape)
@@ -952,6 +953,9 @@ class Analyzer(object):
 			mask_expanded[:,:,0]= mask
 			bbox= utils.extract_bboxes(mask_expanded)
 			self.bboxes_gt.append(bbox[0])
+			
+			print("BBOX_GT %d" % (i+1))
+			print(bbox[0])
 	
 			label= self.class_names_gt[self.class_ids_gt_merged[i]]
 			caption = label
@@ -1827,14 +1831,14 @@ class Analyzer(object):
 	# ========================
 	# ==   DRAW RESULTS
 	# ========================
-	def draw_results(self,outfile):
+	def draw_results(self, outfile):
 		""" Draw results """
 
 		# - Create axis
 		logger.debug("Create axis...")
 		height, width = self.image.shape[:2]
 		#figsize=(height,width)
-		figsize=(16,16)
+		figsize=(16, 16)
 		fig, ax = plt.subplots(1, figsize=figsize)
 	
 		# - Show area outside image boundaries
@@ -1914,17 +1918,17 @@ class Analyzer(object):
 			ax.imshow(masked_image.astype(np.uint8))
 	
 		else:
-			ax.imshow(masked_image)
+			#ax.imshow(masked_image)
+			ax.imshow(self.image)
 
 		# - Write to file	
 		logger.debug("Write to file %s ..." % outfile)
 		t1 = time.time()
-		fig.savefig(outfile)
-		#fig.savefig(outfile,bbox_inches='tight')
+		#fig.savefig(outfile)
+		###fig.savefig(outfile,bbox_inches='tight')
 		t2 = time.time()
-		#print('savefig: %.2fs' % (t2 - t1))
-		plt.close(fig)
-		#plt.show()
+		#plt.close(fig)
+		plt.show()
 
 	
 	# ========================
