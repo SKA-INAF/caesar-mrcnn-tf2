@@ -508,23 +508,23 @@ class Analyzer(object):
 		###############
 		##  TEST ######
 		###############
-		image, gt_masks, gt_class_ids, gt_boxes, image_meta, original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[0]
+		#image, gt_masks, gt_class_ids, gt_boxes, image_meta, original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[0]
 		
-		print("IMAGE")
-		print(image.shape)
-		plt.imshow(image)
-		plt.show()
+		#print("IMAGE")
+		#print(image.shape)
+		#plt.imshow(image)
+		#plt.show()
     
-		print("GT_MASKS")
-		print(gt_masks.shape)
-		for i in range(gt_masks.shape[-1]):
-			print("GT_MASK %d" % (i+1))
-			print(gt_masks[:,:,i].shape)
-			plt.imshow(gt_masks[:,:,i])
-			plt.show()
+		#print("GT_MASKS")
+		#print(gt_masks.shape)
+		#for i in range(gt_masks.shape[-1]):
+		#	print("GT_MASK %d" % (i+1))
+		#	print(gt_masks[:,:,i].shape)
+		#	plt.imshow(gt_masks[:,:,i])
+		#	plt.show()
     	
-		print("GT_BOXES")
-		print(gt_boxes)	
+		#print("GT_BOXES")
+		#print(gt_boxes)	
 		###############	
 
 		# - Load image
@@ -538,6 +538,12 @@ class Analyzer(object):
 		self.image_metadata= self.dataset.image_metadata(self.image_id)
 		t2 = time.time()
 		dt_loadimg= t2-t1
+		
+		print("image_processed")
+		print(image_processed.shape)
+		print("image_meta")
+		print(image_meta.shape)
+		print(image_meta)
 
 		# - Get detector result
 		t1 = time.time()
