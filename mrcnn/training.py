@@ -174,7 +174,7 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
     #===========================
     # - Save the model weights
     outfile_weights= 'maskrcnn_' + config['backbone'] + '_cp-{:04d}.h5'.format(config['epochs'])
-    outfile_weights_fullpath= os.path.join(os.getcwd(), )
+    outfile_weights_fullpath= os.path.join(os.getcwd(), outfile_weights)
     logger.info("Saving model weights to file %s ..." % (outfile_weights))
     model.save_weights(outfile_weights_fullpath)
 		
