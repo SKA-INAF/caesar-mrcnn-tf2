@@ -176,14 +176,9 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
     logger.info("Saving model weights ...")
     model.save_weights('model_weights.h5')
 		
-    # - Save the model architecture in json format
-    logger.info("Saving model architecture in json format ...")
-    with open('model_architecture.json', 'w') as f:
-      f.write(model.to_json())
-
     # - Save the model
-    logger.info("Saving full model ...")
-    model.save('model.h5')
+    #logger.info("Saving full model ...")
+    #model.save('model.h5')
 		
     # - Save the network architecture diagram
     logger.info("Saving model architecture to file ...")
