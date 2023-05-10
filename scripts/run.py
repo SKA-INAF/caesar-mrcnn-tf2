@@ -536,11 +536,15 @@ def main():
 	elif args.command == "test":
 		CONFIG['training']= False
 		CONFIG['gpu_num']= 1
+		#CONFIG['images_per_gpu']= 1
+		#CONFIG['batch_size']= 1
 		
 	elif args.command == "inference":
 		CONFIG['training']= False
 		CONFIG['gpu_num']= 1
-	
+		#CONFIG['images_per_gpu']= 1
+		#CONFIG['batch_size']= 1
+	 	
 	# - Set addon options
 	#config.IMG_PATH= args.image
 	#config.IMG_XMIN= args.xmin
@@ -628,6 +632,14 @@ def main():
 			weights_path=weights_path,
 			verbose=True
 		)
+	
+		# - Set this after load_weights	
+		CONFIG['training']= False
+		CONFIG['gpu_num']= 1
+		CONFIG['images_per_gpu']= 1
+		CONFIG['batch_size']= 1
+		model.config= CONFIG
+		
 		
 	#===========================
 	#==   RUN
