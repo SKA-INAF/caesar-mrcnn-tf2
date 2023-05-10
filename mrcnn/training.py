@@ -173,17 +173,12 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
     #==   SAVE MODEL
     #===========================
     # - Save the model weights
-    logger.info("Saving model weights ...")
-    model.save_weights('model_weights.h5')
+    outfile_weights= 'maskrcnn_' + config['backbone'] + '_cp-{:04d}.h5'.format(config['epochs'])
+    outfile_weights_fullpath= os.path.join(os.getcwd(), )
+    logger.info("Saving model weights to file %s ..." % (outfile_weights))
+    model.save_weights(outfile_weights_fullpath)
 		
-    # - Save the model
-    #logger.info("Saving full model ...")
-    #model.save('model.h5')
-		
-    # - Save the network architecture diagram
-    logger.info("Saving model architecture to file ...")
-    plot_model(model, to_file='model.png', show_shapes=True)
-
+    
 
 
 def get_optimizer(kwargs):
