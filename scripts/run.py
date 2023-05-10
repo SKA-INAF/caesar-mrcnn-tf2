@@ -34,6 +34,7 @@ from mrcnn.model import mask_rcnn_functional
 from mrcnn.evaluation import ModelTester
 from mrcnn import inference_utils
 from mrcnn.inference_utils import weights_transfer
+from mrcnn.inference import SFinder
 
 #===========================
 #==   IMPORT MPI
@@ -103,20 +104,6 @@ def parse_args():
 	parser.add_argument('-sigma_clip_baseline', '--sigma_clip_baseline', dest='sigma_clip_baseline', required=False, type=float, default=0, action='store',help='Lower sigma threshold to be used for clipping pixels below (mean-sigma_low*stddev) in first channel of 3-channel preprocessing (default=0)')
 	parser.add_argument('-nchannels', '--nchannels', dest='nchannels', required=False, type=int, default=1, action='store',help='Number of channels (1=default). If you modify channels in preprocessing you must set this accordingly')
 	
-	#parser.add_argument('--grayimg', dest='grayimg', action='store_true')	
-	#parser.set_defaults(grayimg=False)
-	#parser.add_argument('--no_uint8', dest='to_uint8', action='store_false')	
-	#parser.set_defaults(to_uint8=True)
-	#parser.add_argument('--no_zscale', dest='zscale', action='store_false')	
-	#parser.set_defaults(zscale=True)
-	#parser.add_argument('--zscale_contrasts', dest='zscale_contrasts', required=False, type=str, default='0.25,0.25,0.25',help='zscale contrasts applied to all channels') 
-	#parser.add_argument('--biascontrast', dest='biascontrast', action='store_true')	
-	#parser.set_defaults(biascontrast=False)
-	#parser.add_argument('--bias', dest='bias', required=False, type=float, default=0.5,help='Bias value (default=0.5)') 
-	#parser.add_argument('--contrast', dest='contrast', required=False, type=float, default=1.0,help='Contrast value (default=1)') 
-	#parser.add_argument('--no_norm_img', dest='norm_img', action='store_false')	
-	#parser.set_defaults(norm_img=True)	
-	
 	# - DATA AUGMENTATION OPTIONS
 	parser.add_argument('--use_augmentation', dest='use_augmentation', action='store_true',help='Augment images')	
 	parser.set_defaults(use_augmentation=False)
@@ -130,22 +117,16 @@ def parse_args():
 	parser.add_argument('--classid_remap_dict', dest='classid_remap_dict', required=False, type=str, default='',help='Dictionary used to remap detected classid to gt classid')
  
  	# - DATA LOADER
-	#parser.add_argument('--dataloader',required=False,metavar="Data loader type",type=str,default='datalist',help='Train/cross-val data loader type {datalist,datalist_json,datadir_json}')
 	parser.add_argument('--datalist', required=False, metavar="/path/to/dataset", help='Train/test data filelist containing a list of json files')
-	#parser.add_argument('--datalist_train', required=False,metavar="/path/to/train_dataset", default=None, help='Train data filelist with format: filename_img,filename_mask,label or: filename_json')
 	parser.add_argument('--datalist_val', required=False, metavar="/path/to/val_dataset", default=None, help='Validation data filelist containing a list of json files')
-	#parser.add_argument('--datadir', required=False,metavar="/path/to/dataset",help='Train/test data top dir traversed to search json dataset files')
-	#parser.add_argument('--validation_data_fract', dest='validation_data_fract', required=False, default=0.1, help='Fraction of input data used for cross-validation (default=0.1)')
 	parser.add_argument('--maxnimgs', required=False, metavar="", type=int, default=-1, help="Max number of images to consider in dataset (-1=all) (default=-1)")
-	
 	
 	# - TRAIN OPTIONS
 	parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5", help="Path to weights .h5 file")
-	parser.add_argument('--ngpu', required=False,default=1,type=int,metavar="Number of GPUs",help='Number of GPUs')
+	parser.add_argument('--backbone_weights', required=False, default=None, metavar="/path/to/weights.h5", help="Backbone network initialization weights: {None, imagenet, Path to weights .h5 file}")
+	parser.add_argument('--ngpu', required=False, default=1, type=int, metavar="Number of GPUs", help='Number of GPUs')
 	parser.add_argument('--nimg_per_gpu', required=False,default=1,type=int,metavar="Number of images per gpu",help='Number of images per gpu (default=1)')
 	parser.add_argument('--nepochs', required=False,default=1,type=int,metavar="Number of training epochs",help='Number of training epochs (default=1)')
-	#parser.add_argument('--epoch_length', required=False,type=int,default=None,metavar="Number of data batches per epoch",help='Number of data batches per epoch. If None, assumed equal to the train sample size.')
-	#parser.add_argument('--nvalidation_steps', required=False,default=None,type=int,metavar="Number of validation steps per epoch",help='Number of validation steps per epoch. If None, assumed equal to the cross-validation sample size.')
 	parser.add_argument('--rpn_anchor_scales', dest='rpn_anchor_scales', required=False, type=str, default='4,8,16,32,64',help='RPN anchor scales') 
 	parser.add_argument('--max_gt_instances', dest='max_gt_instances', required=False, type=int, default=300,help='Max GT instances') 
 	parser.add_argument('--backbone', dest='backbone', required=False, type=str, default='resnet101',help='Backbone network {resnet101,resnet50,custom} (default=resnet101)') 
@@ -181,16 +162,11 @@ def parse_args():
 	parser.add_argument('--no_mrcnn_mask_loss', dest='mrcnn_mask_loss', action='store_false')
 	parser.set_defaults(mrcnn_mask_loss=True)
 
-	#parser.add_argument('--mask_loss_function', dest='mask_loss_function', required=False, type=str, default='binary_crossentropy', choices=['binary_crossentropy', 'dice_coef_loss'], help="Which loss function to use for mask loss. Accepted values are: binary_crossentropy and dice_coef_loss")
-
 	parser.add_argument('--weight_classes', dest='weight_classes', action='store_true')	
 	parser.set_defaults(weight_classes=False)
 	
-	parser.add_argument('--exclude_first_layer_weights', dest='exclude_first_layer_weights', action='store_true')	
-	parser.set_defaults(exclude_first_layer_weights=False)
-
-	#parser.add_argument('--no_augmentation', dest='use_augmentation', action='store_false')
-	#parser.set_defaults(use_augmentation=True)
+	#parser.add_argument('--exclude_first_layer_weights', dest='exclude_first_layer_weights', action='store_true')	
+	#parser.set_defaults(exclude_first_layer_weights=False)
 
 	# - TEST OPTIONS
 	parser.add_argument('--scoreThr', required=False,default=0.7,type=float,metavar="Object detection score threshold to be used during test",help="Object detection score threshold to be used during test")
@@ -201,13 +177,13 @@ def parse_args():
 	parser.set_defaults(consider_sources_near_mixed_sidelobes=True)
 
 	# - DETECT OPTIONS
-	parser.add_argument('--image',required=False,metavar="Input image",type=str,help='Input image in FITS format to apply the model (used in detect task)')
+	parser.add_argument('--image', required=False, metavar="Input image", type=str, help='Input image in FITS format to apply the model (used in detect task)')
 	parser.add_argument('--xmin', dest='xmin', required=False, type=int, default=-1, help='Image min x to be read (read all if -1)') 
 	parser.add_argument('--xmax', dest='xmax', required=False, type=int, default=-1, help='Image max x to be read (read all if -1)') 
 	parser.add_argument('--ymin', dest='ymin', required=False, type=int, default=-1, help='Image min y to be read (read all if -1)') 
 	parser.add_argument('--ymax', dest='ymax', required=False, type=int, default=-1, help='Image max y to be read (read all if -1)') 
-	parser.add_argument('--detect_outfile',required=False,metavar="Output plot filename",type=str,default="",help='Output plot PNG filename (internally generated if left empty)')
-	parser.add_argument('--detect_outfile_json',required=False,metavar="Output json filename with detected objects",type=str,default="",help='Output json filename with detected objects (internally generated if left empty)')
+	parser.add_argument('--detect_outfile', required=False, metavar="Output plot filename", type=str, default="", help='Output plot PNG filename (internally generated if left empty)')
+	parser.add_argument('--detect_outfile_json', required=False, metavar="Output json filename with detected objects", type=str, default="", help='Output json filename with detected objects (internally generated if left empty)')
 
 	# - PARALLEL PROCESSING OPTIONS
 	parser.add_argument('--split_img_in_tiles', dest='split_img_in_tiles', action='store_true')	
@@ -277,7 +253,7 @@ def validate_args(args):
 ############################################################
 #        TEST
 ############################################################
-def test(args, model, config, dataset):
+def run_test(args, model, config, dataset):
 	""" Test the model on input dataset with ground truth knowledge """  
 
 	# - Check inputs
@@ -312,6 +288,28 @@ def test(args, model, config, dataset):
 	tester.test()
 
 	return 0
+	
+############################################################
+#        DETECT
+############################################################
+def run_inference(args, model, config):
+	""" Test the model on input dataset with ground truth knowledge """ 
+
+	# - Create sfinder and detect sources
+	sfinder= SFinder(model, config)
+
+	if args.split_img_in_tiles:
+		logger.info("Running sfinder parallel version ...")
+		status= sfinder.run_parallel()
+	else:
+		logger.info("Running sfinder serial version ...")
+		status= sfinder.run()
+
+	if status<0:
+		logger.error("sfinder run failed, see logs...")
+		return -1
+
+	return 0
 
 ############################################################
 #       MAIN
@@ -343,11 +341,9 @@ def main():
 		print("Datalist: ", args.datalist)
 		print("nEpochs: ", args.nepochs)
 		print("Weights: ", args.weights)
-		#print("epoch_length: ",args.epoch_length)
-		#print("nvalidation_steps: ",args.nvalidation_steps)
 		print("ngpu: ",args.ngpu)
 		print("nimg_per_gpu: ",args.nimg_per_gpu)
-		#print("scoreThr: ",args.scoreThr)
+		print("scoreThr: ",args.scoreThr)
 		print("classdict: ",args.classdict)
 
 	#===========================
@@ -367,10 +363,6 @@ def main():
 	rpn_anchor_scales= tuple([int(x.strip()) for x in args.rpn_anchor_scales.split(',')])
 	backbone_strides= [int(x.strip()) for x in args.backbone_strides.split(',')]
 	rpn_anchor_ratios= [float(x.strip()) for x in args.rpn_anchor_ratios.split(',')]
-
-	#train_from_scratch= False
-	#if not weights_path or weights_path=='':
-	#	train_from_scratch= True
 
 	#exclude_first_layer_weights= args.exclude_first_layer_weights
 
@@ -424,38 +416,8 @@ def main():
 		print("CLASS_NAMES (MODEL)")
 		print(class_names_model)
 		print(class_dict_model)
-
-	#loss_weight_dict= {}
-	#loss_weight_dict['rpn_class_loss']= args.rpn_class_loss_weight
-	#loss_weight_dict['rpn_bbox_loss']= args.rpn_bbox_loss_weight
-	#loss_weight_dict['mrcnn_class_loss']= args.mrcnn_class_loss_weight
-	#loss_weight_dict['mrcnn_bbox_loss']= args.mrcnn_bbox_loss_weight
-	#loss_weight_dict['mrcnn_mask_loss']= args.mrcnn_mask_loss_weight
 	
 	loss_weights= [args.rpn_class_loss_weight, args.rpn_bbox_loss_weight, args.mrcnn_class_loss_weight, args.mrcnn_bbox_loss_weight, args.mrcnn_mask_loss_weight]
-
-	#use_loss_dict= {}
-	#use_loss_dict['rpn_class_loss']= True
-	#use_loss_dict['rpn_bbox_loss']= True
-	#use_loss_dict['mrcnn_class_loss']= True
-	#use_loss_dict['mrcnn_bbox_loss']= True
-	#use_loss_dict['mrcnn_mask_loss']= True
- 
-	#if not args.rpn_class_loss:
-	#	use_loss_dict['rpn_class_loss']= False
-	#if not args.rpn_bbox_loss:
-	#	use_loss_dict['rpn_bbox_loss']= False
-	#if not args.mrcnn_class_loss:
-	#	use_loss_dict['mrcnn_class_loss']= False
-	#if not args.mrcnn_bbox_loss:
-	#	use_loss_dict['mrcnn_bbox_loss']= False
-	#if not args.mrcnn_mask_loss:
-	#	use_loss_dict['mrcnn_mask_loss']= False
-
-	#mask_loss_function = args.mask_loss_function
-
-	#consider_sources_near_mixed_sidelobes = args.consider_sources_near_mixed_sidelobes
-
 
 	#==============================
 	#==   DEFINE PRE-PROCESSOR
@@ -476,9 +438,6 @@ def main():
 
 	if args.chan3_preproc:
 		preprocess_stages.append( Chan3Trasformer(sigma_clip_baseline=args.sigma_clip_baseline, sigma_clip_low=args.sigma_clip_low, sigma_clip_up=args.sigma_clip_up, zscale_contrast=zscale_contrasts[0]) )
-
-	#if resize:
-	#	preprocess_stages.append(Resizer(resize_size=args.imgsize, upscale=upscale, downscale_with_antialiasing=downscale_with_antialiasing, set_pad_val_to_min=set_pad_val_to_min))
 
 	if args.normalize_minmax:
 		preprocess_stages.append(MinMaxNormalizer(norm_min=args.norm_min, norm_max=args.norm_max))
@@ -522,6 +481,7 @@ def main():
 	CONFIG['max_gt_instances']= args.max_gt_instances
 	CONFIG['backbone']= args.backbone
 	CONFIG['backbone_strides']= backbone_strides
+	CONFIG['backbone_init_weights']= backbone_weights
 	CONFIG['rpn_nms_threshold']= args.rpn_nms_threshold
 	CONFIG['rpn_train_anchors_per_image']= args.rpn_train_anchors_per_image
 	CONFIG['train_rois_per_image']= args.train_rois_per_image
@@ -533,53 +493,23 @@ def main():
 
 	CONFIG['training']= True
 	
-	#if args.command == "train":
-	#	CONFIG['training']= True
-	#	CONFIG['gpu_num']= args.ngpu
-		
-	#elif args.command == "test":
-	#	CONFIG['training']= False
-	#	CONFIG['gpu_num']= 1
-	#	#CONFIG['images_per_gpu']= 1
-	#	#CONFIG['batch_size']= 1
-		
-	#elif args.command == "inference":
-	#	CONFIG['training']= False
-	#	CONFIG['gpu_num']= 1
-	#	#CONFIG['images_per_gpu']= 1
-	#	#CONFIG['batch_size']= 1
-	 	
 	# - Set addon options
-	#config.IMG_PATH= args.image
-	#config.IMG_XMIN= args.xmin
-	#config.IMG_XMAX= args.xmax
-	#config.IMG_YMIN= args.ymin
-	#config.IMG_YMAX= args.ymax
-	#config.ZSCALE_STRETCH= args.zscale
-	#config.ZSCALE_CONTRASTS= [float(x) for x in args.zscale_contrasts.split(',')]
-	#config.NORMALIZE_IMG= args.norm_img
-	#config.IMG_TO_UINT8= args.to_uint8
-	#config.IMG_TO_RGB= not args.grayimg
-	#if args.grayimg:
-	#	config.IMAGE_CHANNEL_COUNT= 1 # for gray-level images (see https://github.com/matterport/Mask_RCNN/wiki)
-	#	config.MEAN_PIXEL= 0          # for gray-level images
-
-	#config.BIAS_CONTRAST_STRETCH= args.biascontrast
-	#config.IMG_BIAS= args.bias
-	#config.IMG_CONTRAST= args.contrast
-
-	#config.IOU_THR= args.iouThr
-	#config.SCORE_THR= args.scoreThr
-
-	#config.MPI= MPI
-	#config.SPLIT_IMG_IN_TILES= args.split_img_in_tiles
-	#config.TILE_XSIZE= args.tile_xsize
-	#config.TILE_YSIZE= args.tile_ysize
-	#config.TILE_XSTEP= args.tile_xstep
-	#config.TILE_YSTEP= args.tile_ystep
-
-	#config.OUTFILE= args.detect_outfile
-	#config.OUTFILE_JSON= args.detect_outfile_json
+	config['preprocessor']= dp
+	config['image_path']= args.image
+	config['image_xmin']= args.xmin
+	config['image_xmax']= args.xmax
+	config['image_ymin']= args.ymin
+	config['image_ymax']= args.ymax
+	config['mpi']= MPI
+	config['split_image_in_tiles']= args.split_img_in_tiles
+	config['tile_xsize']= args.tile_xsize
+	config['tile_ysize']= args.tile_ysize
+	config['tile_xstep']= args.tile_xstep
+	config['tile_ystep']= args.tile_ystep
+	config['iou_thr']= args.iouThr
+	config['score_thr']= args.scoreThr
+	config['outfile']= args.detect_outfile
+	config['outfile_json']= args.detect_outfile_json
 
 	
 	logger.info("[PROC %d] Config options: %s" % (procId, str(CONFIG)))
@@ -636,15 +566,6 @@ def main():
 			weights_path=weights_path,
 			verbose=True
 		)
-		#model.load_weights(weights_path)
-	
-		# - Set this after load_weights	
-		#CONFIG['training']= False
-		#CONFIG['gpu_num']= 1
-		#CONFIG['images_per_gpu']= 1
-		#CONFIG['batch_size']= 1
-		#model.config= CONFIG
-		
 		
 	# - Create model for inference
 	model_inference= None
@@ -676,14 +597,14 @@ def main():
 		)
             
 	elif args.command == "test":
-		if test(args, model_inference, config_inference, dataset)<0:
+		if run_test(args, model_inference, config_inference, dataset)<0:
 			logger.error("[PROC %d] Failed to run model test!" % (procId))
 			return 1
 	
-	#elif args.command == "inference":
-	#	if detect(args, model, config)<0:
-	#		logger.error("[PROC %d] Failed to run detect!" % procId)
-	#		return 1
+	elif args.command == "inference":
+		if run_inference(args, model_inference, config_inference)<0:
+			logger.error("[PROC %d] Failed to run model inference!" % procId)
+			return 1
 	
 	return 0
 

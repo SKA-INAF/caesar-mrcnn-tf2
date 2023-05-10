@@ -565,8 +565,8 @@ class Analyzer(object):
 		self.scores= list(scores)
 		self.nobjects= self.masks.shape[-1]
 		
-		plt.imshow(image_processed)
-		plt.show()
+		#plt.imshow(image_processed)
+		#plt.show()
 		
 		
 		masks_proc= mrcnn_mask[0].numpy()
@@ -693,6 +693,7 @@ class Analyzer(object):
 		if image is None:
 			logger.error("No input image given!")
 			return -1
+			
 		self.image= image
 		self.image_xmin= xmin
 		self.image_ymin= ymin
@@ -701,22 +702,65 @@ class Analyzer(object):
 			self.image_id= image_id
 		if header:
 			self.image_header= header
-
+			
+		# - Pre-process image?
+		image_processed= np.copy(image)
+		dp= self.config['preprocessor']
+		if dp is not None:
+			image_processed= self.preprocessor(image)
+			
+		# - Resize image
+		image_processed, window, scale, padding, crop = utils.resize_image(
+			image_processed,
+			min_dim=self.config['image_min_dim'],
+			min_scale=self.config['image_min_scale'],
+			max_dim=self.config['image_max_dim'],
+			mode=self.config['image_resize_mode']
+		)	
+		
+		# - Get image meta
+		image_meta= utils.compose_image_meta(
+    	image_id=self.image_id,
+			original_image_shape=self.image.shape,
+			window=window,
+			scale=scale,
+			active_class_ids=np.zeros([self.config['num_classes']], dtype=np.int32),
+			config=self.config
+		)
+			
 		# - Get detector result
-		r = self.model.detect([self.image], verbose=0)[0]
-		self.class_names= self.config.CLASS_NAMES
-		self.masks= r['masks']
-		self.boxes= r['rois']
-		self.class_ids= r['class_ids']
-		self.scores= r['scores']
+		#r = self.model.detect([self.image], verbose=0)[0]
+		#self.class_names= self.config.CLASS_NAMES
+		#self.masks= r['masks']
+		#self.boxes= r['rois']
+		#self.class_ids= r['class_ids']
+		#self.scores= r['scores']
+		#self.nobjects= self.masks.shape[-1]
+
+		inference_output= self.model([np.expand_dims(image_processed, 0), np.expand_dims(image_meta, 0)]) 
+		detections, mrcnn_probs, mrcnn_bbox, mrcnn_mask, rpn_rois, rpn_class, rpn_bbox = inference_output
+    
+		boxes, class_ids, scores, full_masks= utils.reformat_detections(
+    	detections=detections[0].numpy(), 
+			mrcnn_mask=mrcnn_mask[0].numpy(), 
+			original_image_shape=self.image.shape, 
+			image_shape=image_processed.shape, 
+			window=window
+		)
+		
+		self.class_names= [key for key in self.config['class_dict']] 
+		self.masks= full_masks
+		self.boxes= boxes
+		self.class_ids= list(class_ids)
+		self.scores= list(scores)
 		self.nobjects= self.masks.shape[-1]
 
 		# - Process detected masks
 		if self.nobjects>0:
-			logger.info("Processing detected masks for image %s ..." % self.image_id)
+			logger.info("Processing detected masks for image %s ..." % (self.image_id))
 			self.extract_det_masks()
 		else:
-			logger.warn("No detected object found for image %s ..." % self.image_id)
+			logger.warn("No detected object found for image %s ..." % (self.image_id))
 			return 0
  
 		# - Set gt box if given
@@ -724,7 +768,7 @@ class Analyzer(object):
 			
 		# - Draw results
 		if self.draw:
-			logger.info("Drawing results for image %s ..." % str(self.image_id))
+			logger.info("Drawing results for image %s ..." % (str(self.image_id)))
 			if self.outfile=="":
 				outfile= 'out_' + str(self.image_id) + '.png'
 			else:

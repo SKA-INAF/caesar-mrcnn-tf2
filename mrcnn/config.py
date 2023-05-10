@@ -192,6 +192,37 @@ CONFIG = {
     'frozen_backbone': False,
     'frozen_rpn_model': False,
     'frozen_mask_head': False,
-    'frozen_cls_head': False
+    'frozen_cls_head': False,
+    
+    #######################################
+    ##    ADDON INFERENCE OPTIONS
+    #######################################
+    # - Preprocessor function
+    'preprocessor': None,
+
+		# - Image read options
+    'image_path': '',
+    'image_xmin': 0,
+    'image_xmax': 0,
+    'image_ymin': 0,
+    'image_ymax': 0,
+		
+    # - Image parallel read options
+    'mpi': None,
+    'split_image_in_tiles': False,
+    'tile_xsize': 256, # in pixels
+    'tile_ysize': 256, # in pixels
+    'tile_xstep': 1.0, # [0,1], 1=no overlap
+    'tile_ystep': 1.0, # [0,1], 1=no overlap
+    'max_ntasks_per_worker': 100,
+
+    # - Source detection options
+    'iou_thr': 0.6,
+    'score_thr': 0.7,
+
+    # - Catalog output file options
+    'outfile': '',
+    'outfile_json': ''
+	
 
 }

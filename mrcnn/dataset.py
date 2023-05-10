@@ -108,8 +108,9 @@ class Dataset:
 		# - Set number of classes
 		self.nclasses= len(self.classes_dict)
 		self.class_values = list(self.classes_dict.values())
+		self.class_names = [key for key in self.classes_dict]
 		
-		logger.info("classes_dict=%s, nclasses=%d" % (str(self.classes_dict), self.nclasses))
+		logger.info("classes_dict=%s, nclasses=%d, class_names=%s" % (str(self.classes_dict), self.nclasses, str(self.class_names)))
 	
 		return 0
 		
@@ -136,8 +137,9 @@ class Dataset:
 		# - Set number of classes
 		self.nclasses= len(self.classes_dict)
 		self.class_values = list(self.classes_dict.values())
+		self.class_names = [key for key in self.classes_dict]
 		
-		logger.debug("classes_dict=%s, nclasses=%d" % (str(self.classes_dict), self.nclasses))
+		logger.debug("classes_dict=%s, nclasses=%d, class_names=%s" % (str(self.classes_dict), self.nclasses, str(self.class_names)))
 	
 		return 0
 		
@@ -359,7 +361,7 @@ class Dataset:
 		
 		# - Set vars
 		self.image_ids= np.arange(self.loaded_imgs)
-		self.class_names = [key for key in self.classes_dict]
+		##self.class_names = [key for key in self.classes_dict]
 
 		return 0
 
@@ -400,7 +402,7 @@ class Dataset:
 		original_input_shape= image.shape
 		
 		# - Apply pre-processing
-		if preprocess:
+		if preprocess and self.preprocessor is not None:
 			image= self.preprocessor(image)
 
 		# - Resize image
@@ -437,7 +439,7 @@ class Dataset:
 		original_input_shape= image.shape
 		
 		# - Apply pre-processing
-		if preprocess:
+		if preprocess and self.preprocessor is not None:
 			image= self.preprocessor(image)
 
 		# - Resize image

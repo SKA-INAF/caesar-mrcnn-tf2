@@ -172,6 +172,9 @@ def read_fits(filename, strip_deg_axis=False):
 		logger.error(errmsg)
 		hdu.close()
 		return None
+		
+	# - Replace NANs with zeros
+	output_data[~np.isfinite(output_data)]= 0
 
 	# - Read metadata
 	header= hdu[0].header
@@ -282,16 +285,39 @@ def strip_deg_axis_from_header(header):
 		
 		
 		
-def read_fits_crop(filename, ixmin, ixmax, iymin, iymax):
+def read_fits_crop(filename, ixmin, ixmax, iymin, iymax, strip_deg_axis=False):
 	""" Read a portion of FITS image specified by x-y ranges and return data. Using fitsio module and not astropy. NB: xmax/ymax pixel are excluded """
 
+	# - Check if entire tile has to be read
+	read_full= (ixmin==0 or ixmin==-1) and (ixmax==0 or ixmax==-1) and (iymin==0 or iymin==-1) and (iymax==0 or iymax==-1)
+	if read_full:
+		logger.warn("Reading entire image as given image ranges are all <=0 (not an error if this is the user intention)...")
+		return read_fits(filename, strip_deg_axis)
+		
+	# - Check tile ranges given
+	if ixmin<0 or ixmax<0: 
+		logger.error("ixmin/ixmax must be >0")
+		return None
+		
+	if iymin<0 or iymax<0: 
+		logger.error("iymin/iymax must be >0")
+		return None
+		
+	if ixmax<=ixmin:
+		logger.error("ixmax must be >ixmin!")
+		return None
+		
+	if iymax<=iymin:
+		logger.error("iymax must be >iymin!")
+		return None
+	
 	# - Open file
 	try:
 		f= fitsio.FITS(filename)
 	except Exception as e:
 		logger.error("Failed to open file %s (err=%s)!" % (filename, str(e)))
 		return None
-
+		
 	# - Read image chunk
 	hdu_id= 0
 	data_dims= f[hdu_id].get_dims()
@@ -312,10 +338,25 @@ def read_fits_crop(filename, ixmin, ixmax, iymin, iymax):
 		f.close()
 		return None
 		
+	# - Replace NANs with zeros
+	data[~np.isfinite(data)]= 0
+		
+	# - Read header
+	header = f[hdu_id].read_header()
+	
+	# - Strip degenerate axis
+	if strip_deg_axis:
+		header= strip_deg_axis_from_header(header)
+
+	# - Get WCS
+	wcs = WCS(header)
+	if wcs is None:
+		logger.warn("No WCS in input image!")
+		
 	# - Close file
 	f.close()
 
-	return data
+	return data, header, wcs
 
 
 
