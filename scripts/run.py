@@ -494,22 +494,22 @@ def main():
 	CONFIG['training']= True
 	
 	# - Set addon options
-	config['preprocessor']= dp
-	config['image_path']= args.image
-	config['image_xmin']= args.xmin
-	config['image_xmax']= args.xmax
-	config['image_ymin']= args.ymin
-	config['image_ymax']= args.ymax
-	config['mpi']= MPI
-	config['split_image_in_tiles']= args.split_img_in_tiles
-	config['tile_xsize']= args.tile_xsize
-	config['tile_ysize']= args.tile_ysize
-	config['tile_xstep']= args.tile_xstep
-	config['tile_ystep']= args.tile_ystep
-	config['iou_thr']= args.iouThr
-	config['score_thr']= args.scoreThr
-	config['outfile']= args.detect_outfile
-	config['outfile_json']= args.detect_outfile_json
+	CONFIG['preprocessor']= dp
+	CONFIG['image_path']= args.image
+	CONFIG['image_xmin']= args.xmin
+	CONFIG['image_xmax']= args.xmax
+	CONFIG['image_ymin']= args.ymin
+	CONFIG['image_ymax']= args.ymax
+	CONFIG['mpi']= MPI
+	CONFIG['split_image_in_tiles']= args.split_img_in_tiles
+	CONFIG['tile_xsize']= args.tile_xsize
+	CONFIG['tile_ysize']= args.tile_ysize
+	CONFIG['tile_xstep']= args.tile_xstep
+	CONFIG['tile_ystep']= args.tile_ystep
+	CONFIG['iou_thr']= args.iouThr
+	CONFIG['score_thr']= args.scoreThr
+	CONFIG['outfile']= args.detect_outfile
+	CONFIG['outfile_json']= args.detect_outfile_json
 
 	
 	logger.info("[PROC %d] Config options: %s" % (procId, str(CONFIG)))
