@@ -198,7 +198,7 @@ CONFIG = {
     ##    ADDON INFERENCE OPTIONS
     #######################################
     # - Preprocessor function
-    'preprocessor': None,
+    'preprocess_fcn': None,
 
 		# - Image read options
     'image_path': '',

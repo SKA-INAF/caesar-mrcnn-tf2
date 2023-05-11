@@ -705,9 +705,9 @@ class Analyzer(object):
 			
 		# - Pre-process image?
 		image_processed= np.copy(image)
-		dp= self.config['preprocessor']
+		dp= self.config['preprocess_fcn']
 		if dp is not None:
-			image_processed= self.preprocessor(image)
+			image_processed= dp(image)
 			
 		# - Resize image
 		image_processed, window, scale, padding, crop = utils.resize_image(

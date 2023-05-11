@@ -494,7 +494,7 @@ def main():
 	CONFIG['training']= True
 	
 	# - Set addon options
-	CONFIG['preprocessor']= dp
+	CONFIG['preprocess_fcn']= dp
 	CONFIG['image_path']= args.image
 	CONFIG['image_xmin']= args.xmin
 	CONFIG['image_xmax']= args.xmax
