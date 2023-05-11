@@ -481,7 +481,7 @@ def main():
 	CONFIG['max_gt_instances']= args.max_gt_instances
 	CONFIG['backbone']= args.backbone
 	CONFIG['backbone_strides']= backbone_strides
-	CONFIG['backbone_init_weights']= backbone_weights
+	CONFIG['backbone_init_weights']= args.backbone_weights
 	CONFIG['rpn_nms_threshold']= args.rpn_nms_threshold
 	CONFIG['rpn_train_anchors_per_image']= args.rpn_train_anchors_per_image
 	CONFIG['train_rois_per_image']= args.train_rois_per_image
