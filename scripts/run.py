@@ -73,7 +73,7 @@ def parse_args():
 	# - DATA PRE-PROCESSING OPTIONS
 	parser.add_argument('--imgsize', dest='imgsize', required=False, type=int, default=256, help='Size in pixel used to resize input image (default=256)')
 	
-	parser.add_argument('--normalize_minmax', dest='normalize_minmax', action='store_true',help='Normalize each channel in range [0,1]')	
+	parser.add_argument('--normalize_minmax', dest='normalize_minmax', action='store_true',help='Normalize each channel in range. Default: [0,1]')	
 	parser.set_defaults(normalize_minmax=False)
 	parser.add_argument('-norm_min', '--norm_min', dest='norm_min', required=False, type=float, default=0., action='store',help='Normalization min value (default=0)')
 	parser.add_argument('-norm_max', '--norm_max', dest='norm_max', required=False, type=float, default=1., action='store',help='Normalization max value (default=1)')
@@ -432,6 +432,9 @@ def main():
 
 	if args.clip_data:
 		preprocess_stages.append(SigmaClipper(sigma_low=args.sigma_clip_low, sigma_up=args.sigma_clip_up, chid=args.clip_chid))
+
+	if args.nchannels>1:
+		preprocess_stages.append(ChanResizer(nchans=args.nchannels))
 
 	if args.zscale_stretch:
 		preprocess_stages.append(ZScaleTransformer(contrasts=zscale_contrasts))
