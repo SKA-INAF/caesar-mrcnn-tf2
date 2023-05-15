@@ -1575,7 +1575,7 @@ class Analyzer(object):
 					logger.warn("Invalid gt bbox (%d,%d,%d,%d) in image %s when computing IOU among boxes, skip it..." % (bbox_gt[1],bbox_gt[3],bbox_gt[0],bbox_gt[2],self.image_path) )
 					continue
 
-				iou= utils.get_iou(bbox, bbox_gt)
+				iou= addon_utils.get_iou(bbox, bbox_gt)
 				mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
 
 				logger.info("IOU(det=%d,true=%d)=%f, MaskIOU(det=%d,true=%d)=%f" % (j,i,iou,j,i,mask_iou))
@@ -1640,7 +1640,7 @@ class Analyzer(object):
 					logger.warn("Invalid gt bbox (%d,%d,%d,%d) in image %s when computing IOU among boxes, skip it..." % (bbox_gt[1],bbox_gt[3],bbox_gt[0],bbox_gt[2],self.image_path) )
 					continue
 
-				iou= utils.get_iou(bbox, bbox_gt)
+				iou= addon_utils.get_iou(bbox, bbox_gt)
 				mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
 
 				#if iou>=self.iou_thr and iou>=iou_best:
