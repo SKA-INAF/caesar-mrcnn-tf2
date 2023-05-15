@@ -24,6 +24,8 @@ import warnings
 from typing import Tuple
 import uuid
 
+import matplotlib.pyplot as plt
+
 # - Import TF modules
 from tensorflow import cast
 from tensorflow.keras.utils import Sequence
@@ -103,6 +105,38 @@ class DataLoader(Sequence):
 
             image, gt_masks, gt_class_ids, gt_boxes, image_meta, \
             original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[index]
+            
+            
+            print("image")
+            print(image.shape)
+            plt.imshow(image)
+            plt.show()
+            
+            for k in range(gt_masks.shape[-1]):
+              print("mask %d" % (k+1))
+              print(gt_masks[:,:,k].shape)
+              plt.imshow(gt_masks[:,:,k])
+              plt.show()
+              print("gt_boxes %d" % (k+1))
+              print(gt_boxes[k])
+              print("gt_class_ids %d" % (k+1))
+              print(gt_class_ids[k])
+               
+            print("original_image")
+            print(original_image.shape)
+            plt.imshow(original_image)
+            plt.show()
+            
+            for k in range(original_masks_array.shape[-1]):
+              print("original mask %d" % (k+1))
+              print(original_masks_array[:,:,k].shape)
+              plt.imshow(original_masks_array[:,:,k])
+              plt.show()
+              print("original_bboxes %d" % (k+1))
+              print(original_bboxes[k])
+              print("original_class_ids %d" % (k+1))
+              print(original_class_ids[k])
+            
             # Skip images that have no instances. This can happen in cases
             # where we train on a subset of classes and the image doesn't
             # have any of the classes we care about.
@@ -224,6 +258,7 @@ class DataLoader(Sequence):
         if self.return_original:
             inputs.extend([batch_original_imgs, batch_original_masks, batch_original_class_ids, batch_original_bboxes])
 
+        
         return inputs, outputs
 
     def __getitem__(self, i: int) -> Tuple[list, list]:
