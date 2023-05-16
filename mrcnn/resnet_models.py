@@ -7,6 +7,11 @@ from classification_models import get_submodules_from_kwargs
 from classification_models.models._common_blocks import ChannelSE
 from classification_models.weights import load_model_weights
 
+##############################
+##     GLOBAL VARS
+##############################
+from mrcnn import logger
+
 backend = keras.backend
 layers = keras.layers
 models = keras.models
