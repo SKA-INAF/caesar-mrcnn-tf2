@@ -394,11 +394,20 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
     """
     # Keep track of image dtype and return results in the same dtype
     image_dtype = image.dtype
+    image_ndims= image.ndim
+    
     # Default window (y1, x1, y2, x2) and default scale == 1.
     h, w = image.shape[:2]
     window = (0, 0, h, w)
     scale = 1
-    padding = [(0, 0), (0, 0), (0, 0)]
+    if image_ndims==3:
+		    padding = [(0, 0), (0, 0), (0, 0)] # with multi-channel images
+    elif image_ndims==2:
+		    padding = [(0, 0)] # with 2D images
+    else:
+		    logger.error("Unsupported image ndims (%d), returning None!" % (image_ndims))
+		    return None
+		
     crop = None
 
     if mode == "none":
@@ -408,6 +417,7 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
     if min_dim:
         # Scale up but not down
         scale = max(1, min_dim / min(h, w))
+        
     if min_scale and scale < min_scale:
         scale = min_scale
 
@@ -417,10 +427,11 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
         if round(image_max * scale) > max_dim:
             scale = max_dim / image_max
 
+
     # Resize image using bilinear interpolation
     if scale != 1:
-        image = resize(image, (round(h * scale), round(w * scale)),
-                       preserve_range=True)
+        image = resize(image, (round(h * scale), round(w * scale)), preserve_range=True)
+
 
     # Need padding or cropping?
     if mode == "square":
@@ -430,13 +441,26 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
         bottom_pad = max_dim - h - top_pad
         left_pad = (max_dim - w) // 2
         right_pad = max_dim - w - left_pad
-        padding = [(top_pad, bottom_pad), (left_pad, right_pad), (0, 0)]
+        
+        if image_ndims==3:
+			      padding = [(top_pad, bottom_pad), (left_pad, right_pad), (0, 0)] # multi-channel
+        elif image_ndims==2:
+            padding = [(top_pad, bottom_pad), (left_pad, right_pad)] # 2D images
+        else:
+            logger.error("Unsupported image ndims (%d), returning None!" % (image_ndims))
+            return None
+        
         image = np.pad(image, padding, mode='constant', constant_values=0)
         window = (top_pad, left_pad, h + top_pad, w + left_pad)
+        
     elif mode == "pad64":
         h, w = image.shape[:2]
         # Both sides must be divisible by 64
-        assert min_dim % 64 == 0, "Minimum dimension must be a multiple of 64"
+        ##assert min_dim % 64 == 0, "Minimum dimension must be a multiple of 64"
+        if min_dim % 64 != 0:
+            logger.error("Minimum dimension must be a multiple of 64, returning None!")
+            return None
+        
         # Height
         if h % 64 > 0:
             max_h = h - (h % 64) + 64
@@ -444,6 +468,7 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
             bottom_pad = max_h - h - top_pad
         else:
             top_pad = bottom_pad = 0
+            
         # Width
         if w % 64 > 0:
             max_w = w - (w % 64) + 64
@@ -451,9 +476,19 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
             right_pad = max_w - w - left_pad
         else:
             left_pad = right_pad = 0
-        padding = [(top_pad, bottom_pad), (left_pad, right_pad), (0, 0)]
+            
+        ##padding = [(top_pad, bottom_pad), (left_pad, right_pad), (0, 0)]
+        if image_ndims==3:
+             padding = [(top_pad, bottom_pad), (left_pad, right_pad), (0, 0)]
+        elif image_ndims==2:
+             padding = [(top_pad, bottom_pad), (left_pad, right_pad)]
+        else:
+             logger.error("Unsupported image ndims (%d), returning None!" % (image_ndims))
+             return None
+			
         image = np.pad(image, padding, mode='constant', constant_values=0)
         window = (top_pad, left_pad, h + top_pad, w + left_pad)
+        
     elif mode == "crop":
         # Pick a random crop
         h, w = image.shape[:2]
@@ -463,7 +498,10 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
         image = image[y:y + min_dim, x:x + min_dim]
         window = (0, 0, min_dim, min_dim)
     else:
-        raise Exception("Mode {} not supported".format(mode))
+        #raise Exception("Mode {} not supported".format(mode))
+        logger.error("Mode %s not supported!" % (mode))
+        return None
+		
     return image.astype(image_dtype), window, scale, padding, crop
 
 

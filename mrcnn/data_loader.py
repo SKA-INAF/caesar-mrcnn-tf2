@@ -107,35 +107,39 @@ class DataLoader(Sequence):
             original_image, original_masks_array, original_class_ids, original_bboxes = self.dataset[index]
             
             
-            print("image")
-            print(image.shape)
-            plt.imshow(image)
-            plt.show()
+            #print("image")
+            #print(image.shape)
+            #plt.imshow(image)
+            #plt.show()
             
-            for k in range(gt_masks.shape[-1]):
-              print("mask %d" % (k+1))
-              print(gt_masks[:,:,k].shape)
-              plt.imshow(gt_masks[:,:,k])
-              plt.show()
-              print("gt_boxes %d" % (k+1))
-              print(gt_boxes[k])
-              print("gt_class_ids %d" % (k+1))
-              print(gt_class_ids[k])
+            #for k in range(gt_masks.shape[-1]):
+            #  print("gt_boxes %d" % (k+1))
+            #  print(gt_boxes[k])
+            #  print("gt_class_ids %d" % (k+1))
+            #  print(gt_class_ids[k])
+              
+            #  print("mask %d" % (k+1))
+            #  print(gt_masks[:,:,k].shape)
+            #  plt.imshow(gt_masks[:,:,k])
+            #  plt.show()
+              
                
-            print("original_image")
-            print(original_image.shape)
-            plt.imshow(original_image)
-            plt.show()
+            #print("original_image")
+            #print(original_image.shape)
+            #plt.imshow(original_image)
+            #plt.show()
             
-            for k in range(original_masks_array.shape[-1]):
-              print("original mask %d" % (k+1))
-              print(original_masks_array[:,:,k].shape)
-              plt.imshow(original_masks_array[:,:,k])
-              plt.show()
-              print("original_bboxes %d" % (k+1))
-              print(original_bboxes[k])
-              print("original_class_ids %d" % (k+1))
-              print(original_class_ids[k])
+            #for k in range(original_masks_array.shape[-1]):
+            #  print("original_bboxes %d" % (k+1))
+            #  print(original_bboxes[k])
+            #  print("original_class_ids %d" % (k+1))
+            #  print(original_class_ids[k])
+              
+            #  print("original mask %d" % (k+1))
+            #  print(original_masks_array[:,:,k].shape)
+            #  plt.imshow(original_masks_array[:,:,k])
+            #  plt.show()
+              
             
             # Skip images that have no instances. This can happen in cases
             # where we train on a subset of classes and the image doesn't

@@ -432,10 +432,11 @@ class Dataset:
 		return image, image_meta, window
 		
 		
-	def process_image(self, image, image_id, preprocess=True, resize=True):
+	def process_image(self, input_image, image_id, preprocess=True, resize=True):
 		""" Read image and process it """
 		
-		# - Read image	
+		# - Read image
+		image= input_image.copy()
 		original_input_shape= image.shape
 		
 		# - Apply pre-processing
@@ -623,6 +624,27 @@ class Dataset:
 		# - Image meta data
 		logger.debug("Computing image metadata ...")
 		image_meta = utils.compose_image_meta(idx, original_image_shape, window, scale, active_class_ids, self.kwargs)
+
+		
+		#print("original_image")
+		#print(original_image.shape)
+		#print("original_image min/max=%f/%f" % (original_image.min(), original_image.max()))
+		#print("proc_image")
+		#print(proc_image.shape)
+		#print("proc_image min/max=%f/%f" % (proc_image.min(), proc_image.max()))
+		#fig, axs = plt.subplots(2, 2)
+		#axs[0, 0].imshow(original_image)
+		#if proc_image.max()==1:
+		#	axs[0, 1].imshow(proc_image)
+		#elif proc_image.max()==255:
+		#	axs[0, 1].imshow(proc_image/255)
+		#else:
+		#	axs[0, 1].imshow(proc_image)
+			
+		#axs[1, 0].imshow(original_masks_array[:,:,0])
+		#axs[1, 1].imshow(proc_masks[:,:,0])
+		
+		#plt.show()
 
 		return proc_image, proc_masks, proc_class_ids, bboxes, image_meta, \
 			original_image, original_masks_array, original_class_ids, original_bboxes

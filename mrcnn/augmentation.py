@@ -21,6 +21,8 @@ import logging
 from collections import Counter
 import json
 
+import matplotlib.pyplot as plt
+
 ## ASTROPY MODULES 
 from astropy.io import ascii
 from astropy.stats import sigma_clipped_stats
@@ -549,10 +551,30 @@ class Augmenter(object):
 		# - Augment masks
 		#   NB: Change mask to np.uint8 because imgaug doesn't support np.bool
 		try:
-			masks_aug= augmenter_det.augment_images([mask.astype(np.uint8) for mask in masks], hooks=imgaug.HooksImages(activator=self.hook))
+			#masks_aug= augmenter_det.augment_images([mask.astype(np.uint8) for mask in masks], hooks=imgaug.HooksImages(activator=self.hook))
+			masks_aug= augmenter_det.augment_images([mask.astype(np.uint8) for mask in masks])
 		except Exception as e:
 			logger.error("Failed to augment mask (err=%s)!" % str(e))
 			return None
+			
+		#print("non aug image")
+		#plt.imshow(data)
+		#plt.show()
+		#print("aug image")
+		#plt.imshow(data_aug)
+		#plt.show()
+		
+		#for k in range(len(masks)):	
+		#	print("non aug mask %d" % (k+1))
+		#	print(masks[k].shape)
+		#	plt.imshow(masks[k])
+		#	plt.show()
+			
+		#	print("aug mask %d" % (k+1))
+		#	print(masks_aug[k].shape)
+		#	plt.imshow(masks_aug[k])
+		#	plt.show()
+
 
 		return data_aug, masks_aug
 		
