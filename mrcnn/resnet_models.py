@@ -292,7 +292,16 @@ def ResNet(model_params, input_shape=None, input_tensor=None, include_top=True,
 
     if weights:
         if type(weights) == str and os.path.exists(weights):
-            model.load_weights(weights)
+            ##model.load_weights(weights)
+            try:
+                model.load_weights(weights)
+            except Exception as e:
+                logger.warn("Failed to load weights from file %s (err=%s), retrying to load by layer name ..." % (weights, str(e)))
+                    try:
+                        model.load_weights(weights, by_name=True)
+                    except Exception as e:
+                        logger.error("Failed to load weights from file %s by name (err=%s), giving up!" % (weights, str(e)))
+                        raise
         else:
             load_model_weights(model, model_params.model_name,
                                weights, classes, include_top, **kwargs)
