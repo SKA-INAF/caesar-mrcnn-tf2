@@ -300,6 +300,7 @@ def ResNet(model_params, input_shape=None, input_tensor=None, include_top=True,
     if weights:
         if type(weights) == str and os.path.exists(weights):
             ##model.load_weights(weights)
+            logger.info("Loading model weights from file %s ..." % (weights))
             try:
                 model.load_weights(weights)
             except Exception as e:
