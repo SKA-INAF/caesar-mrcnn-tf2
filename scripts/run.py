@@ -493,6 +493,7 @@ def main():
 	CONFIG['image_min_dim']= args.imgsize
 	CONFIG['image_max_dim']= args.imgsize
 	CONFIG['image_shape']= ([args.imgsize, args.imgsize, args.nchannels])
+	CONFIG['img_size']= args.imgsize
 
 	CONFIG['training']= True
 	
