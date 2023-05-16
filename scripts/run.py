@@ -123,7 +123,7 @@ def parse_args():
 	
 	# - TRAIN OPTIONS
 	parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5", help="Path to weights .h5 file")
-	parser.add_argument('--backbone_weights', required=False, default=None, metavar="/path/to/weights.h5", help="Backbone network initialization weights: {None, imagenet, Path to weights .h5 file}")
+	parser.add_argument('--backbone_weights', required=False, default="random", metavar="/path/to/weights.h5", help="Backbone network initialization weights: {random, imagenet, Path to weights .h5 file}")
 	parser.add_argument('--ngpu', required=False, default=1, type=int, metavar="Number of GPUs", help='Number of GPUs')
 	parser.add_argument('--nimg_per_gpu', required=False,default=1,type=int,metavar="Number of images per gpu",help='Number of images per gpu (default=1)')
 	parser.add_argument('--nepochs', required=False,default=1,type=int,metavar="Number of training epochs",help='Number of training epochs (default=1)')
@@ -363,6 +363,12 @@ def main():
 	rpn_anchor_scales= tuple([int(x.strip()) for x in args.rpn_anchor_scales.split(',')])
 	backbone_strides= [int(x.strip()) for x in args.backbone_strides.split(',')]
 	rpn_anchor_ratios= [float(x.strip()) for x in args.rpn_anchor_ratios.split(',')]
+	
+	backbone_weights= None
+	if args.backbone_weights=="random":
+		backbone_weights= None
+	else:
+		backbone_weights= args.backbone_weights
 
 	#exclude_first_layer_weights= args.exclude_first_layer_weights
 
@@ -484,7 +490,7 @@ def main():
 	CONFIG['max_gt_instances']= args.max_gt_instances
 	CONFIG['backbone']= args.backbone
 	CONFIG['backbone_strides']= backbone_strides
-	CONFIG['backbone_init_weights']= args.backbone_weights
+	CONFIG['backbone_init_weights']= backbone_weights
 	CONFIG['rpn_nms_threshold']= args.rpn_nms_threshold
 	CONFIG['rpn_train_anchors_per_image']= args.rpn_train_anchors_per_image
 	CONFIG['train_rois_per_image']= args.train_rois_per_image
