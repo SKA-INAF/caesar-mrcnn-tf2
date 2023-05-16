@@ -302,11 +302,19 @@ def ResNet(model_params, input_shape=None, input_tensor=None, include_top=True,
                 model.load_weights(weights)
             except Exception as e:
                 logger.warn("Failed to load weights from file %s (err=%s), retrying to load by layer name ..." % (weights, str(e)))
+                initial_weights = [layer.get_weights() for layer in model.layers]
                 try:
                     model.load_weights(weights, by_name=True)
                 except Exception as e:
                     logger.error("Failed to load weights from file %s by name (err=%s), giving up!" % (weights, str(e)))
                     raise
+                
+                # - Check if something was effectively loaded
+                for layer, initial in zip(model.layers, initial_weights):
+                  weights_curr= layer.get_weights()
+                  if weights_curr and all(tf.nest.map_structure(np.array_equal, weights_curr, initial)):
+                      logger.warn("Given weight file %s contained no weights for layer %s ..." % (weights, layer.name))
+        
         else:
             load_model_weights(model, model_params.model_name,
                                weights, classes, include_top, **kwargs)
