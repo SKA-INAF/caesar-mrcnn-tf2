@@ -19,5 +19,6 @@ cython
 mpi4py
 tensorflow
 tensorflow_addons
+tqdm
 image-classifiers
 efficientnet

@@ -44,6 +44,7 @@ reqs.append('cython')
 reqs.append('mpi4py')
 reqs.append('tensorflow')
 reqs.append('tensorflow_addons')
+reqs.append('tqdm')
 reqs.append('image-classifiers')
 reqs.append('efficientnet')
 
