@@ -154,8 +154,9 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
         tf.keras.callbacks.TensorBoard(log_dir=tensorboard_logdir,
                                        histogram_freq=config['callback']['histogram_freq'],
                                        profile_batch=config['callback']['profile_batch'],
-                                       ),
-        tfa.callbacks.TQDMProgressBar()                                
+                                       )
+                                       #,
+        #tfa.callbacks.TQDMProgressBar()                                
     ]
 
     model.fit(train_datagen,#train_datagen.repeat(),
@@ -165,7 +166,7 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
               epochs=config['epochs'],
               initial_epoch=initial_epoch,
               callbacks=callbacks_list,
-              verbose=0,#True
+              verbose=2,#True
               use_multiprocessing=config['use_multiprocessing'],
               workers=config['workers'],
               max_queue_size=int(config['queue_multiplier'] * config['batch_size']),
