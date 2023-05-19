@@ -169,8 +169,8 @@ def parse_args():
 	#parser.set_defaults(exclude_first_layer_weights=False)
 
 	# - TEST OPTIONS
-	parser.add_argument('--scoreThr', required=False,default=0.7,type=float,metavar="Object detection score threshold to be used during test",help="Object detection score threshold to be used during test")
-	parser.add_argument('--iouThr', required=False,default=0.6,type=float,metavar="IOU threshold used to match detected objects with true objects",help="IOU threshold used to match detected objects with true objects")
+	parser.add_argument('--scoreThr', required=False, default=0.7, type=float, metavar="Object detection score threshold to be used during test",help="Object detection score threshold to be used during test")
+	parser.add_argument('--iouThr', required=False, default=0.6, type=float, metavar="IOU threshold used to match detected objects with true objects",help="IOU threshold used to match detected objects with true objects")
 
 	parser.add_argument('--consider_sources_near_mixed_sidelobes', dest='consider_sources_near_mixed_sidelobes', action='store_true')
 	parser.add_argument('--no_consider_sources_near_mixed_sidelobes', dest='consider_sources_near_mixed_sidelobes', action='store_false')
@@ -197,6 +197,15 @@ def parse_args():
 	#parser.add_argument('--logs', required=False, default=DEFAULT_LOGS_DIR, metavar="/path/to/logs/", help='Logs and checkpoints directory (default=logs/)')
 	#parser.add_argument('--nthreads', required=False, default=1, type=int, metavar="Number of worker threads", help="Number of worker threads")
 
+	# - DRAW OPTIONS
+	parser.add_argument('--draw', dest='draw', action='store_true')	
+	parser.set_defaults(draw=False)
+	parser.add_argument('--draw_shaded_masks', dest='draw_shaded_masks', action='store_true')	
+	parser.set_defaults(draw_shaded_masks=False)
+	parser.add_argument('--draw_class_label_in_caption', dest='draw_class_label_in_caption', action='store_true')	
+	parser.set_defaults(draw_class_label_in_caption=False)
+	parser.add_argument('--save_plots', dest='save_plots', action='store_true')	
+	parser.set_defaults(save_plots=False)
 
 	args = parser.parse_args()
 
@@ -239,7 +248,17 @@ def validate_args(args):
 		return -1
 
 	# - Check weight file exists
-	# ...
+	if args.weights!="":
+		check= os.path.exists(args.weights) and os.path.isfile(args.weights)
+		if not check:
+			logger.error("Given weight file %s not existing or not a file!" % (args.weights))
+			return -1
+			
+	if args.backbone_weights!="":
+		check= os.path.exists(args.backbone_weights) and os.path.isfile(args.backbone_weights)
+		if not check:
+			logger.error("Given backbone weight file %s not existing or not a file!" % (args.backbone_weights))
+			return -1
 
 	# - Check remap id
 	if args.remap_classids:
@@ -284,6 +303,10 @@ def run_test(args, model, config, dataset):
 	tester.n_max_img= args.maxnimgs
 	tester.remap_classids= args.remap_classids 
 	tester.classid_map= classid_remap_dict
+	tester.save_plots= args.save_plots
+	tester.draw= args.draw
+	tester.draw_shaded_masks= args.draw_shaded_masks
+	tester.draw_class_label_in_caption= args.draw_class_label_in_caption
 
 	tester.test()
 
