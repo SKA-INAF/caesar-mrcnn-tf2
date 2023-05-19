@@ -253,8 +253,9 @@ def validate_args(args):
 		if not check:
 			logger.error("Given weight file %s not existing or not a file!" % (args.weights))
 			return -1
-			
-	if args.backbone_weights!="":
+		
+	backbone_weights_list= ["", "random", "imagenet"]	
+	if args.backbone_weights not in backbone_weights_list
 		check= os.path.exists(args.backbone_weights) and os.path.isfile(args.backbone_weights)
 		if not check:
 			logger.error("Given backbone weight file %s not existing or not a file!" % (args.backbone_weights))
