@@ -98,6 +98,12 @@ class ModelTester(object):
 		self.reliability_dict_list= []	
 		self.outfilename_completeness= "completeness.csv"
 		self.outfilename_reliability= "reliability.csv"
+		
+		# - Draw options
+		self.save_plots= True
+		self.draw= True
+		self.draw_shaded_masks= False
+		self.draw_class_label_in_caption= False
 
 	# ========================
 	# ==     TEST
@@ -128,6 +134,10 @@ class ModelTester(object):
 			analyzer.iou_thr= self.iou_thr
 			analyzer.remap_classids= self.remap_classids
 			analyzer.classid_map= self.classid_map
+			analyzer.save_plots= self.save_plots
+			analyzer.draw= self.draw
+			analyzer.draw_shaded_masks= self.draw_shaded_masks
+			analyzer.draw_class_label_in_caption= self.draw_class_label_in_caption
 
 			# - Inspecting results
 			logger.info("Inspecting results for image %s ..." % image_path_base)
@@ -462,6 +472,7 @@ class Analyzer(object):
 		self.outfile= ""
 		self.outfile_json= ""
 		self.outfile_ds9= ""
+		self.save_plots= False
 		self.draw= True
 		self.draw_shaded_masks= False
 		self.draw_class_label_in_caption= False
@@ -539,11 +550,11 @@ class Analyzer(object):
 		t2 = time.time()
 		dt_loadimg= t2-t1
 		
-		print("image_processed")
-		print(image_processed.shape)
-		print("image_meta")
-		print(image_meta.shape)
-		print(image_meta)
+		#print("image_processed")
+		#print(image_processed.shape)
+		#print("image_meta")
+		#print(image_meta.shape)
+		#print(image_meta)
 
 		# - Get detector result
 		t1 = time.time()
@@ -570,26 +581,27 @@ class Analyzer(object):
 		
 		
 		masks_proc= mrcnn_mask[0].numpy()
-		print("masks_proc")
-		print(masks_proc.shape)
 		
-		print("boxes")
-		print(type(boxes))
-		print(boxes.shape)
-		print(boxes)
-		print("class_ids")
-		print(type(class_ids))
-		print(class_ids.shape)
-		print("scores")
-		print(type(scores))
-		print(scores.shape)
-		print("full_masks")
-		print(type(full_masks))
-		print(full_masks.shape)
+		#print("masks_proc")
+		#print(masks_proc.shape)
+		
+		#print("boxes")
+		#print(type(boxes))
+		#print(boxes.shape)
+		#print(boxes)
+		#print("class_ids")
+		#print(type(class_ids))
+		#print(class_ids.shape)
+		#print("scores")
+		#print(type(scores))
+		#print(scores.shape)
+		#print("full_masks")
+		#print(type(full_masks))
+		#print(full_masks.shape)
 		
 		for i in range(self.nobjects):
 			mask= self.masks[:,:,i]
-			print("mask %d, n=%d" % (i+1, np.count_nonzero(mask)))
+			#print("mask %d, n=%d" % (i+1, np.count_nonzero(mask)))
 			#plt.imshow(mask)
 			#plt.show()
 		
@@ -641,16 +653,16 @@ class Analyzer(object):
 		self.sidelobes_mixed_or_near_gt = self.dataset.image_info[self.image_id]['sidelobes_mixed_or_near']
 		logger.debug("class_ids_gt elements: {}".format(' '.join(map(str, self.class_ids_gt))))
 
-		print("self.masks_gt.shape")
-		print(self.masks_gt.shape)
-		print("self.class_ids_gt")
-		print(self.class_ids_gt)
+		#print("self.masks_gt.shape")
+		#print(self.masks_gt.shape)
+		#print("self.class_ids_gt")
+		#print(self.class_ids_gt)
 		for i in range(self.masks_gt.shape[-1]):
 			logger.info("Draw GT masks ...")
-			print("mask_gt.shape")
-			print(self.masks_gt[:,:,i].shape)
-			plt.imshow(self.masks_gt[:,:,i])
-			plt.show()
+			#print("mask_gt.shape")
+			#print(self.masks_gt[:,:,i].shape)
+			#plt.imshow(self.masks_gt[:,:,i])
+			#plt.show()
 
 		self.labels_gt= []
 		self.colors_gt= []
@@ -1037,14 +1049,14 @@ class Analyzer(object):
 			#print("self.class_names")
 			#print(self.class_names)
 			
-			print("mask")
-			print(mask)
-			print("class_id")
-			print(class_id)
-			print("score")
-			print(score)
-			print("box")
-			print(self.boxes[i])
+			#print("mask")
+			#print(mask)
+			#print("class_id")
+			#print(class_id)
+			#print("score")
+			#print(score)
+			#print("box")
+			#print(self.boxes[i])
 			
 			plt.imshow(mask)
 			plt.show()
@@ -1269,12 +1281,12 @@ class Analyzer(object):
 				mask_expanded[:,:,0]= masks_merged[index]
 				bbox= utils.extract_bboxes(mask_expanded)
 				
-				print("masks_merged[index]")
-				print(masks_merged[index])
-				print("mask_expanded")
-				print(mask_expanded)
-				print("bbox")
-				print(bbox)
+				#print("masks_merged[index]")
+				#print(masks_merged[index])
+				#print("mask_expanded")
+				#print(mask_expanded)
+				#print("bbox")
+				#print(bbox)
 				
 				plt.imshow(masks_merged[index])
 				plt.show()
@@ -1372,10 +1384,10 @@ class Analyzer(object):
 		
 		ndim= len(data.shape)
 		
-		print("self.image.shape")
-		print(self.image.shape)
-		print("data.shape")
-		print(data.shape)
+		#print("self.image.shape")
+		#print(self.image.shape)
+		#print("data.shape")
+		#print(data.shape)
 			
 		if ndim!=2:
 			logger.error("Image size needed for computing morph pars should be =2 and not %d!" % (ndim))
@@ -1896,8 +1908,13 @@ class Analyzer(object):
 		#ax.set_title(title,fontsize=30)
 	
 		#ax.set_frame_on(False)
-
-		masked_image = self.image.astype(np.uint32).copy()
+		
+		# - Normalize image for drawing scopes to [0,255]
+		masked_image= self.image.astype(np.uint32).copy()
+		img_max= masked_image.max()
+		if img_max==1:
+			masked_image= masked_image*255
+		
 
 		# - Draw true bounding box
 		if self.bboxes_gt:
@@ -1962,23 +1979,26 @@ class Analyzer(object):
 			ax.imshow(masked_image.astype(np.uint8))
 	
 		else:
-			#ax.imshow(masked_image)
-			ax.imshow(self.image)
+			ax.imshow(masked_image)
+			##ax.imshow(self.image)
 
 		# - Write to file	
 		logger.debug("Write to file %s ..." % outfile)
 		t1 = time.time()
-		#fig.savefig(outfile)
-		###fig.savefig(outfile,bbox_inches='tight')
-		t2 = time.time()
-		#plt.close(fig)
-		plt.show()
+		if self.save_plots:
+			fig.savefig(outfile)
+			##fig.savefig(outfile, bbox_inches='tight')
+			plt.close(fig)
+			t2 = time.time()
+		else:
+			t2 = time.time()
+			plt.show()
 
 	
 	# ========================
 	# ==     MASK METHODS
 	# ========================
-	def merge_masks(self,mask1,mask2):
+	def merge_masks(self, mask1, mask2):
 		""" Merge masks """
 		mask= mask1 + mask2
 		mask[mask>1]= 1	
