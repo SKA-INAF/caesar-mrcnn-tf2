@@ -49,7 +49,7 @@ from regions import PolygonPixelRegion, RectanglePixelRegion, PixCoord
 ## USER MODULES
 from mrcnn import logger
 from mrcnn.graph import Graph
-from mrcnn import utils, addon_utils
+from mrcnn import utils, addon_utils, visualize
 
 
 # ========================
