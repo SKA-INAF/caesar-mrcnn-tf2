@@ -118,7 +118,7 @@ def parse_args():
  
  	# - DATA LOADER
 	parser.add_argument('--datalist', required=False, metavar="/path/to/dataset", help='Train/test data filelist containing a list of json files')
-	parser.add_argument('--datalist_val', required=False, metavar="/path/to/val_dataset", default=None, help='Validation data filelist containing a list of json files')
+	parser.add_argument('--datalist_val', required=False, metavar="/path/to/val_dataset", default="", help='Validation data filelist containing a list of json files')
 	parser.add_argument('--maxnimgs', required=False, metavar="", type=int, default=-1, help="Max number of images to consider in dataset (-1=all) (default=-1)")
 	
 	# - TRAIN OPTIONS
