@@ -157,11 +157,18 @@ CONFIG = {
     'loss_weights': [1, 1, 1, 1, 1],
 
     # Optimizer config
+    ##'optimizer_kwargs': {
+    ##    'learning_rate': 0.001,
+    ##    # 'clipnorm': 5.0,
+    ##    'clipvalue': 5.0,
+    ##    'name': 'adamax',
+    ##},
+    
     'optimizer_kwargs': {
-        'learning_rate': 0.001,
+        'learning_rate': 0.0005,
         # 'clipnorm': 5.0,
         'clipvalue': 5.0,
-        'name': 'adamax',
+        'name': 'adam',
     },
 
     # L2 regularization param
