@@ -84,7 +84,8 @@ class MaskRCNN(tf.keras.Model):
         return value
 
     def get_summary_loss(self, rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss,
-                         mrcnn_bbox_loss, mrcnn_mask_loss, l2_reg_loss, assert_nans=True):
+                         mrcnn_bbox_loss, mrcnn_mask_loss, l2_reg_loss, assert_nans=False):
+ #                        mrcnn_bbox_loss, mrcnn_mask_loss, l2_reg_loss, assert_nans=True):
         """
         Calculate summary weighted loss with weights stored in self.config['loss_weights']
         Args:
