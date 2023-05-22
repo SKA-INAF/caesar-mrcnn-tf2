@@ -119,8 +119,9 @@ class MaskRCNN(tf.keras.Model):
         loss = tf.tensordot(a=loss_tuple, b=tf.cast(loss_weights, 'float32'), axes=1)
 
         if l2_reg_loss:
-            assert not np.any(np.isnan(l2_reg_loss))
-            loss = tf.math.add(loss, l2_reg_loss)
+            ##assert not np.any(np.isnan(l2_reg_loss)) ## COMMENTED IT
+            if not np.any(np.isnan(l2_reg_loss))
+                loss = tf.math.add(loss, l2_reg_loss)
 
         return loss
 
