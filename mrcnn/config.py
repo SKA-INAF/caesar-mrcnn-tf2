@@ -164,11 +164,19 @@ CONFIG = {
     ##    'name': 'adamax',
     ##},
     
-    'optimizer_kwargs': {
-        'learning_rate': 0.0005,
+    ##'optimizer_kwargs': {
+    ##    'learning_rate': 0.0005,
+    ##    # 'clipnorm': 5.0,
+    ##    'clipvalue': 5.0,
+    ##    'name': 'adam',
+    ##},
+
+		'optimizer_kwargs': {
+        'learning_rate': 0.0005, # 0.001
+        'clipnorm': 5.0,
         # 'clipnorm': 5.0,
-        'clipvalue': 5.0,
-        'name': 'adam',
+        'momentum': 0.9,
+        'name': 'sgd',
     },
 
     # L2 regularization param
