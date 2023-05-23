@@ -120,7 +120,7 @@ class MaskRCNN(tf.keras.Model):
 
         if l2_reg_loss:
             ##assert not np.any(np.isnan(l2_reg_loss)) ## COMMENTED IT
-            if not np.any(np.isnan(l2_reg_loss))
+            if not np.any(np.isnan(l2_reg_loss)):
                 loss = tf.math.add(loss, l2_reg_loss)
 
         return loss
