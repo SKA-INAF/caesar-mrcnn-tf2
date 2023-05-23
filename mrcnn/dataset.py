@@ -654,7 +654,7 @@ class Dataset:
 		nbad_values_mask= np.count_nonzero(~np.isfinite(proc_masks))
 		nbad_values_bbox= np.count_nonzero(~np.isfinite(bboxes))
 		##nbad_values_id= np.count_nonzero(np.logical_and(~np.isfinite(proc_class_ids), proc_class_ids<0))
-		print("nbad_values: img=%d, mask=%d, bbox=%d, bbox=%s, ids=%s" % (nbad_values_img, nbad_values_mask, nbad_values_bbox, str(bboxes), str(proc_class_ids)))
+		#print("nbad_values: img=%d, mask=%d, bbox=%d, bbox=%s, ids=%s" % (nbad_values_img, nbad_values_mask, nbad_values_bbox, str(bboxes), str(proc_class_ids)))
 
 		return proc_image, proc_masks, proc_class_ids, bboxes, image_meta, \
 			original_image, original_masks_array, original_class_ids, original_bboxes
