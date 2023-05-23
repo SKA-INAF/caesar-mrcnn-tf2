@@ -167,6 +167,13 @@ def parse_args():
 	
 	#parser.add_argument('--exclude_first_layer_weights', dest='exclude_first_layer_weights', action='store_true')	
 	#parser.set_defaults(exclude_first_layer_weights=False)
+	
+	parser.add_argument('--optimizer', dest='optimizer', required=False, type=str, default='sgd', help='Optimizer {sgd,adam,adamax} (default=sgd)')
+	parser.add_argument('--learning_rate', dest='learning_rate', required=False, type=float, default=0.0005, help='Learning rate (default=0.0005)')
+	parser.add_argument('--opt_momentum', dest='opt_momentum', required=False, type=float, default=0.9, help='Momentum parameter in SGD (default=0.9)')
+	parser.add_argument('--opt_clipnorm', dest='opt_clipnorm', required=False, type=float, default=5.0, help='clipnorm optimizer parameter (default=5.0)')
+	parser.add_argument('--opt_clipvalue', dest='opt_clipvalue', required=False, type=float, default=None, help='clipnorm optimizer parameter (default=None)')
+	
 
 	# - TEST OPTIONS
 	parser.add_argument('--scoreThr', required=False, default=0.7, type=float, metavar="Object detection score threshold to be used during test",help="Object detection score threshold to be used during test")
@@ -526,6 +533,24 @@ def main():
 	CONFIG['img_size']= args.imgsize
 
 	CONFIG['training']= True
+	
+	optimizer_kwargs= {}
+	if args.opt_clipvalue is None:
+		optimizer_kwargs= {
+			"name": args.optimizer,
+			"learning_rate": args.learning_rate,
+			"momentum": args.opt_momentum,
+			"clipnorm": args.opt_clipnorm
+		}
+	else:
+		optimizer_kwargs= {
+			"name": args.optimizer,
+			"learning_rate": args.learning_rate,
+			"momentum": args.opt_momentum,
+			"clipvalue": args.opt_clipvalue
+		}
+		
+	CONFIG['optimizer_kwargs']= optimizer_kwargs
 	
 	# - Set addon options
 	CONFIG['preprocess_fcn']= dp
