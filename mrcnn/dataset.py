@@ -384,8 +384,11 @@ class Dataset:
 		#header= res[1]
 		#wcs= res[2]
 		
-		# - Replace NANs with zeros
-		image[~np.isfinite(image)]= 0
+		
+		# - Replace NANs with image min
+		img_min= np.nanmin(image)
+		##image[~np.isfinite(image)]= 0
+		image[~np.isfinite(image)]= img_min
 		
 		# - Convert from 2D to 3D (add channel axis)
 		image= np.expand_dims(image, axis=-1)
