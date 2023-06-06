@@ -875,6 +875,7 @@ class Analyzer(object):
 
 
 		# - Draw results
+		dt_draw= 0
 		if self.draw:
 			logger.info("Drawing results for image %s ..." % self.image_path_base)
 			t1 = time.time()
