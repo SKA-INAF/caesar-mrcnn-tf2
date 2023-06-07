@@ -1911,11 +1911,11 @@ class Analyzer(object):
 		#ax.set_frame_on(False)
 		
 		# - Normalize image for drawing scopes to [0,255]
-		masked_image= self.image.astype(np.uint32).copy()
+		masked_image= self.image.copy()
 		img_max= masked_image.max()
 		if img_max==1:
-			masked_image= masked_image*255
-		
+			masked_image= masked_image*255.
+		masked_image= masked_image.astype(np.uint32)
 
 		# - Draw true bounding box
 		if self.bboxes_gt:
