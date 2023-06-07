@@ -1059,8 +1059,8 @@ class Analyzer(object):
 			#print("box")
 			#print(self.boxes[i])
 			
-			plt.imshow(mask)
-			plt.show()
+			#plt.imshow(mask)
+			#plt.show()
 
 			label = self.class_names[class_id]
 			caption = "{} {:.3f}".format(label, score)
