@@ -1289,8 +1289,8 @@ class Analyzer(object):
 				#print("bbox")
 				#print(bbox)
 				
-				plt.imshow(masks_merged[index])
-				plt.show()
+				#plt.imshow(masks_merged[index])
+				#plt.show()
 
 				if bbox[0][1]>=bbox[0][3] or bbox[0][0]>=bbox[0][2]:
 					logger.warn("Invalid det bbox(%d,%d,%d,%d), skip it ..." % (bbox[0][1],bbox[0][3],bbox[0][0],bbox[0][2]) )
