@@ -658,8 +658,8 @@ class Dataset:
 		
 		#plt.show()
 		
-		print("original_image range=%f/%f" % (original_image.min(), original_image.max()))
-		print("proc_image range=%f/%f" % (proc_image.min(), proc_image.max()))
+		#print("original_image range=%f/%f" % (original_image.min(), original_image.max()))
+		#print("proc_image range=%f/%f" % (proc_image.min(), proc_image.max()))
 		
 		# - Check for NANs
 		nbad_values_img= np.count_nonzero(~np.isfinite(proc_image))

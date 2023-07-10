@@ -267,10 +267,10 @@ class L2RegLoss(tf.keras.losses.Loss):
             reg_losses = [self.regularizer(w) / tf.cast(tf.size(w), tf.float32) for w in self.model.trainable_weights if
                           'gamma' not in w.name and 'beta' not in w.name]
                          
-        print("l2_reg_batchnorm? %d" % (self.config['l2_reg_batchnorm']))
-        print("weight_decay=%f" % (self.config['weight_decay']))
-        print("reg_losses")
-        print(reg_losses)                  
+        #print("l2_reg_batchnorm? %d" % (self.config['l2_reg_batchnorm']))
+        #print("weight_decay=%f" % (self.config['weight_decay']))
+        #print("reg_losses")
+        #print(reg_losses)                  
 
         loss = tf.add_n(reg_losses)
         return loss
