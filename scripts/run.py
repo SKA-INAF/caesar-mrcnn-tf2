@@ -120,6 +120,9 @@ def parse_args():
 	parser.add_argument('--datalist', required=False, metavar="/path/to/dataset", help='Train/test data filelist containing a list of json files')
 	parser.add_argument('--datalist_val', required=False, metavar="/path/to/val_dataset", default="", help='Validation data filelist containing a list of json files')
 	parser.add_argument('--maxnimgs', required=False, metavar="", type=int, default=-1, help="Max number of images to consider in dataset (-1=all) (default=-1)")
+	parser.add_argument('--skip_classes', dest='skip_classes', action='store_true')
+	parser.set_defaults(skip_classes=False)
+	parser.add_argument('--skipped_classes', dest='skipped_classes', required=False, type=str, default='compact',help='List of class names to be skipped in data loading') 
 	
 	# - TRAIN OPTIONS
 	parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5", help="Path to weights .h5 file")
@@ -456,6 +459,9 @@ def main():
 	
 	loss_weights= [args.rpn_class_loss_weight, args.rpn_bbox_loss_weight, args.mrcnn_class_loss_weight, args.mrcnn_bbox_loss_weight, args.mrcnn_mask_loss_weight]
 
+	# - Skipped classes
+	skipped_classes= [str(x) for x in args.skipped_classes.split(',')]
+
 	#==============================
 	#==   DEFINE PRE-PROCESSOR
 	#==============================
@@ -585,6 +591,8 @@ def main():
 	)
 	dataset.set_class_dict(class_dict)
 	dataset.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
+	dataset.skip_classes= args.skip_classes
+	dataset.skipped_classes= skipped_classes
 	
 	logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		
@@ -602,6 +610,8 @@ def main():
 		)
 		dataset_cv.set_class_dict(class_dict)
 		dataset_cv.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
+		dataset_cv.skip_classes= args.skip_classes
+		dataset_cv.skipped_classes= skipped_classes
 	
 		logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		dataset_cv.load_data_from_json_list(args.datalist_val, args.maxnimgs)

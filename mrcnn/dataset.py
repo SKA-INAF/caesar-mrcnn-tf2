@@ -71,6 +71,8 @@ class Dataset:
 		self.image_info = []
 		self.class_names= []
 		self.consider_sources_near_mixed_sidelobes= True
+		self.skip_classes= False
+		self.skipped_classes= []
 				
 		# - Get class indexes from class_dict
 		self.classes_dict = self.kwargs['class_dict']
@@ -267,7 +269,8 @@ class Dataset:
 			is_flagged= obj_dict['sidelobe-mixed']
 			nislands= obj_dict['nislands']
 			class_name= obj_dict['class']
-	
+			
+			
 			# - Use multi-island and flagged classes?
 			if modify_class_names:
 				if nislands>1 and class_name=="extended":
@@ -275,6 +278,12 @@ class Dataset:
 				if is_flagged:
 					class_name= 'flagged'
 				obj_dict['class']= class_name
+
+			# - Skip certain classes?
+			if self.skip_classes and self.skipped_classes:
+				if class_name in self.skipped_classes:
+					logger.info("Skipping this object as class=%s is in skipped list of classes ..." % (class_name))
+					continue
 
 			# - Get class ID from name
 			class_id= 0
