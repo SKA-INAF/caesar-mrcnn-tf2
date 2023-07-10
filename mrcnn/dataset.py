@@ -304,7 +304,11 @@ class Dataset:
 			sidelobes_mixed_or_near.append(sidelobe_mixed_or_near)
 				
 		if not good_masks:
-			logger.error("One or more mask of file %s does not exist or have unexpected extension (.fits required)" % img_fullpath)
+			logger.error("One or more mask of file %s does not exist or have unexpected extension (.fits required)" % (img_fullpath))
+			return -1
+			
+		if not class_ids:
+			logger.warn("No object masks left for image file %s (not an error if you skipped some classes)..." % (img_fullpath))
 			return -1
 					
 		# - Add image & mask informations in dataset class
