@@ -41,6 +41,8 @@ class MaskRCNN(tf.keras.Model):
                 self.losses_tracker_dict.update({loss_name: tf.keras.metrics.Mean(name=loss_name)})
             self.losses_tracker_dict.update({'loss_sum': tf.keras.metrics.Mean(name='loss_sum')})
         print(f'\nMaskRCNN Losses:\n' + ''.join([f'{name}: {loss}\n' for name, loss in self.losses_dict.items()]))
+        
+        print("Optimizer config: %s" % (str(optimizer.get_config())))   
 
     def get_input(self, inputs: list) -> list:
         """
