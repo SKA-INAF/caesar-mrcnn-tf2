@@ -123,6 +123,10 @@ def parse_args():
 	parser.add_argument('--skip_classes', dest='skip_classes', action='store_true')
 	parser.set_defaults(skip_classes=False)
 	parser.add_argument('--skipped_classes', dest='skipped_classes', required=False, type=str, default='compact',help='List of class names to be skipped in data loading') 
+	parser.add_argument('--require_classes', dest='require_classes', action='store_true')
+	parser.set_defaults(require_classes=False)
+	parser.add_argument('--required_classes', dest='required_classes', required=False, type=str, default='extended,extended-multisland,flagged,spurious',help='List of classes that are required (at least one) in an image to be considered in data loading') 
+	
 	
 	# - TRAIN OPTIONS
 	parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5", help="Path to weights .h5 file")
@@ -465,6 +469,9 @@ def main():
 
 	# - Skipped classes
 	skipped_classes= [str(x) for x in args.skipped_classes.split(',')]
+	
+	# - Required classes
+	required_classes= [str(x) for x in args.required_classes.split(',')]
 
 	#==============================
 	#==   DEFINE PRE-PROCESSOR
@@ -600,6 +607,8 @@ def main():
 	dataset.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
 	dataset.skip_classes= args.skip_classes
 	dataset.skipped_classes= skipped_classes
+	dataset.require_classes= args.require_classes
+	dataset.required_classes= required_classes
 	
 	logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		
@@ -619,6 +628,8 @@ def main():
 		dataset_cv.consider_sources_near_mixed_sidelobes= args.consider_sources_near_mixed_sidelobes
 		dataset_cv.skip_classes= args.skip_classes
 		dataset_cv.skipped_classes= skipped_classes
+		dataset_cv.require_classes= args.require_classes
+		dataset_cv.required_classes= required_classes
 	
 		logger.info("[PROC %d] Loading dataset from file %s ..." % (procId, args.datalist))
 		dataset_cv.load_data_from_json_list(args.datalist_val, args.maxnimgs)

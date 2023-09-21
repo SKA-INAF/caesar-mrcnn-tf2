@@ -73,6 +73,9 @@ class Dataset:
 		self.consider_sources_near_mixed_sidelobes= True
 		self.skip_classes= False
 		self.skipped_classes= []
+		self.require_classes= False
+		self.required_classes= []
+		
 				
 		# - Get class indexes from class_dict
 		self.classes_dict = self.kwargs['class_dict']
@@ -257,6 +260,7 @@ class Dataset:
 		class_ids= []
 		sidelobes_mixed_or_near= []
 		good_masks= True
+		are_required_classes_present= False
 				
 		for obj_dict in d['objs']:
 			mask_path= os.path.join(rootdir,obj_dict['mask'])
@@ -269,7 +273,6 @@ class Dataset:
 			is_flagged= obj_dict['sidelobe-mixed']
 			nislands= obj_dict['nislands']
 			class_name= obj_dict['class']
-			
 			
 			# - Use multi-island and flagged classes?
 			if modify_class_names:
@@ -284,6 +287,11 @@ class Dataset:
 				if class_name in self.skipped_classes:
 					logger.info("Skipping this object as class=%s is in skipped list of classes ..." % (class_name))
 					continue
+					
+			# - Check if required classes are present in this image
+			if self.require_classes and self.required_classes:
+				if class_name in self.required_classes:
+					are_required_classes_present= True
 
 			# - Get class ID from name
 			class_id= 0
@@ -310,6 +318,11 @@ class Dataset:
 		if not class_ids:
 			logger.warn("No object masks left for image file %s (not an error if you skipped some classes)..." % (img_fullpath))
 			return -1
+			
+		if self.require_classes and self.required_classes:
+			if not are_required_classes_present:
+				logger.warn("Image file %s does not have at least one of the required classes (not an error if you require some classes) ..." % (img_fullpath))
+				return -1
 					
 		# - Add image & mask informations in dataset class
 		self.add_image(
