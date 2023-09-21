@@ -177,6 +177,8 @@ def parse_args():
 	parser.add_argument('--opt_clipnorm', dest='opt_clipnorm', required=False, type=float, default=5.0, help='clipnorm optimizer parameter (default=5.0)')
 	parser.add_argument('--opt_clipvalue', dest='opt_clipvalue', required=False, type=float, default=None, help='clipnorm optimizer parameter (default=None)')
 	
+	parser.add_argument('--freeze_backbone', dest='freeze_backbone', action='store_true',help='Freeze backbone weights')	
+	parser.set_defaults(freeze_backbone=False)
 
 	# - TEST OPTIONS
 	parser.add_argument('--scoreThr', required=False, default=0.7, type=float, metavar="Object detection score threshold to be used during test",help="Object detection score threshold to be used during test")
@@ -403,6 +405,8 @@ def main():
 		backbone_weights= None
 	else:
 		backbone_weights= args.backbone_weights
+		
+		
 
 	#exclude_first_layer_weights= args.exclude_first_layer_weights
 
@@ -537,6 +541,9 @@ def main():
 	CONFIG['image_max_dim']= args.imgsize
 	CONFIG['image_shape']= ([args.imgsize, args.imgsize, args.nchannels])
 	CONFIG['img_size']= args.imgsize
+	
+	if args.freeze_backbone:
+		CONFIG['frozen_backbone']= True
 
 	CONFIG['training']= True
 	
