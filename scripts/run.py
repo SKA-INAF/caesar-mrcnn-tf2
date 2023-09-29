@@ -212,7 +212,10 @@ def parse_args():
 	# - RUN OPTIONS
 	#parser.add_argument('--logs', required=False, default=DEFAULT_LOGS_DIR, metavar="/path/to/logs/", help='Logs and checkpoints directory (default=logs/)')
 	#parser.add_argument('--nthreads', required=False, default=1, type=int, metavar="Number of worker threads", help="Number of worker threads")
-
+	parser.add_argument('--enable_checkpoints', dest='enable_checkpoints', action='store_true',help='Enable saving of model checkpoints')	
+	parser.set_defaults(enable_checkpoints=False)
+	
+	
 	# - DRAW OPTIONS
 	parser.add_argument('--draw', dest='draw', action='store_true')	
 	parser.set_defaults(draw=False)
@@ -571,6 +574,10 @@ def main():
 		}
 		
 	CONFIG['optimizer_kwargs']= optimizer_kwargs
+	
+	# - Set callbacks
+	if args.enable_checkpoints:
+		config['callback']['checkpoint_enabled']= True
 	
 	# - Set addon options
 	CONFIG['preprocess_fcn']= dp

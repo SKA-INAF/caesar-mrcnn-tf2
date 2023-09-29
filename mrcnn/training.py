@@ -137,26 +137,62 @@ def train_model(model, train_dataset, val_dataset, config, weights_path=None, lo
     model_md5_config = hashlib.md5(config.__repr__().encode()).hexdigest()
     checkpoint_path = os.path.join(config['callback']['checkpoints_dir'], tboard_model_folder, 'checkpoints',
                                    'maskrcnn_' + config['backbone'] + f'_{model_md5_config}' + '_cp-{epoch:04d}.ckpt')
-    callbacks_list = [
-        tf.keras.callbacks.ModelCheckpoint(
-            filepath=checkpoint_path,
-            monitor='val_loss_sum',
-            save_best_only=config['callback']['save_best_only'],
-            save_weights_only=config['callback']['save_weights_only'],
-            save_freq='epoch',
-            verbose=1
-        ),
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss_sum',
-            factor=config['callback']['reduce_lr_on_plateau'],
-            patience=config['callback']['reduce_lr_on_plateau_patience'],
-        ),
-        tf.keras.callbacks.TensorBoard(log_dir=tensorboard_logdir,
-                                       histogram_freq=config['callback']['histogram_freq'],
-                                       profile_batch=config['callback']['profile_batch'],
-                                       ),
-        tfa.callbacks.TQDMProgressBar()                                
-    ]
+                                   
+    checkpoint_cb= tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        monitor='val_loss_sum',
+        save_best_only=config['callback']['save_best_only'],
+        save_weights_only=config['callback']['save_weights_only'],
+        save_freq='epoch',
+        verbose=1
+    )
+        
+    reducelr_cb= tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss_sum',
+        factor=config['callback']['reduce_lr_on_plateau'],
+        patience=config['callback']['reduce_lr_on_plateau_patience'],
+    )
+        
+    tensorboard_cb= tf.keras.callbacks.TensorBoard(
+        log_dir=tensorboard_logdir,
+        histogram_freq=config['callback']['histogram_freq'],
+        profile_batch=config['callback']['profile_batch'],
+    )
+                                                                     
+    
+    callbacks_list= []
+    if config['callback']['checkpoint_enabled']:
+      callbacks_list.append(checkpoint_cb)
+      
+    if config['callback']['reducelr_enabled']:
+      callbacks_list.append(reducelr_cb) 
+    
+    if config['callback']['tensorboard_enabled']:
+      callbacks_list.append(tensorboard_cb)
+      
+    if config['callback']['tqdmprogressbar_enabled']:
+      callbacks_list.append(tfa.callbacks.TQDMProgressBar())
+                                   
+    #callbacks_list = [
+    #    tf.keras.callbacks.ModelCheckpoint(
+    #        filepath=checkpoint_path,
+    #        monitor='val_loss_sum',
+    #        save_best_only=config['callback']['save_best_only'],
+    #        save_weights_only=config['callback']['save_weights_only'],
+    #        save_freq='epoch',
+    #        verbose=1
+    #    ),
+    #    tf.keras.callbacks.ReduceLROnPlateau(
+    #        monitor='val_loss_sum',
+    #        factor=config['callback']['reduce_lr_on_plateau'],
+    #        patience=config['callback']['reduce_lr_on_plateau_patience'],
+    #    ),
+    #    tf.keras.callbacks.TensorBoard(log_dir=tensorboard_logdir,
+    #                                   histogram_freq=config['callback']['histogram_freq'],
+    #                                   profile_batch=config['callback']['profile_batch'],
+    #                                   ),
+    #    tfa.callbacks.TQDMProgressBar()                                
+    #]
 
     model.fit(train_datagen,#train_datagen.repeat(),
               steps_per_epoch=train_dataloader.steps_per_epoch,

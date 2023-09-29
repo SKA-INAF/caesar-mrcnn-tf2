@@ -68,15 +68,20 @@ CONFIG = {
 
     'callback': {
         # TensorBoard callback
+        'tensorboard_enabled': True,
         'checkpoints_dir': os.path.join(os.getcwd(), 'logs', 'scalars'),
         # ReduceLROnPlateau callback
+        'reducelr_enabled': True,
         'reduce_lr_on_plateau': 0.98,
         'reduce_lr_on_plateau_patience': 10,
         # ModelCheckpoint callback
+        'checkpoint_enabled': False, # added
         'save_weights_only': True,
         'save_best_only': True,
         'histogram_freq': 0,
         'profile_batch': '1,2',
+        # TQDMProgressBar
+        'tqdmprogressbar_enabled': True
     },
 
     'backbone_strides': [4, 8, 16, 32, 64],
@@ -208,6 +213,11 @@ CONFIG = {
     'frozen_rpn_model': False,
     'frozen_mask_head': False,
     'frozen_cls_head': False,
+    
+    #######################################
+    ##    ADDON RUN OPTIONS
+    #######################################
+    #'': False,
     
     #######################################
     ##    ADDON INFERENCE OPTIONS
