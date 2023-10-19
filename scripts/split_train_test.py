@@ -33,7 +33,7 @@ def parse_args():
 	parser = argparse.ArgumentParser(description='Mask R-CNN options')
 
 	parser.add_argument('--inputfile', dest='inputfile', required=True, type=str, help='Input file to be splitted in train/test sets') 
-	parser.add_argument('--test_data_fract', dest='test_data_fract', required=False, default=0.4, help='Fraction of input data used for test (default=0.4)')
+	parser.add_argument('--test_data_fract', dest='test_data_fract', required=False, type=float, default=0.4, help='Fraction of input data used for test (default=0.4)')
 	
 	args = parser.parse_args()
 
@@ -110,7 +110,7 @@ def main():
 	logger.info("Creating file data split ...")
 	create_train_val_sets_from_filelist(
 		args.inputfile,
-		args.test_data_fraction
+		args.test_data_fract
 	)
 		
 		
