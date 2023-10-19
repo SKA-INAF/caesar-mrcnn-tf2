@@ -62,5 +62,5 @@ setup(
 	packages=find_packages(),
 	include_package_data=True,
 	install_requires=reqs,
-	scripts=['scripts/run.py'],
+	scripts=['scripts/run.py','scripts/split_train_test.py'],
 )
