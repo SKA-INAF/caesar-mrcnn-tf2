@@ -98,11 +98,11 @@ def main():
 	#==   PARSE ARGS
 	#===========================
 	if procId==0:
-		logger.info("[PROC %d] Parsing script args ..." % procId)
+		logger.info("Parsing script args ...")
 	try:
 		args= parse_args()
 	except Exception as ex:
-		logger.error("[PROC %d] Failed to get and parse options (err=%s)" % (procId, str(ex)))
+		logger.error("Failed to get and parse options (err=%s)" % (str(ex)))
 		return 1
 		
 	#===========================
