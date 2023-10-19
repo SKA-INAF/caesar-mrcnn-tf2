@@ -97,8 +97,7 @@ def main():
 	#===========================
 	#==   PARSE ARGS
 	#===========================
-	if procId==0:
-		logger.info("Parsing script args ...")
+	logger.info("Parsing script args ...")
 	try:
 		args= parse_args()
 	except Exception as ex:
