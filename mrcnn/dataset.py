@@ -523,9 +523,16 @@ class Dataset:
 			data= res[0]
 			height= data.shape[0]
 			width= data.shape[1]
-			data= data.astype(np.bool)
+			try:
+				data= data.astype(np.bool)
+			except:
+				data= data.astype(bool)
+				
 			if mask is None:
-				mask = np.zeros([height,width,nobjs], dtype=np.bool)
+				try:
+					mask = np.zeros([height,width,nobjs], dtype=np.bool)
+				except:
+					mask = np.zeros([height,width,nobjs], dtype=bool)
 			mask[:,:,counter]= data
 			
 			counter+= 1

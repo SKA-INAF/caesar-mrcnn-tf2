@@ -1006,7 +1006,10 @@ class Analyzer(object):
 			mask= self.masks_gt_merged[i]
 			height= mask.shape[0]
 			width= mask.shape[1]
-			mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+			try:
+				mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+			except:
+				mask_expanded = np.zeros([height,width,1],dtype=bool)
 			mask_expanded[:,:,0]= mask
 			bbox= utils.extract_bboxes(mask_expanded)
 			self.bboxes_gt.append(bbox[0])
@@ -1278,7 +1281,10 @@ class Analyzer(object):
 					continue
 				height= masks_merged[index].shape[0]
 				width= masks_merged[index].shape[1]
-				mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+				try:
+					mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+				except:
+					mask_expanded = np.zeros([height,width,1],dtype=bool)
 				mask_expanded[:,:,0]= masks_merged[index]
 				bbox= utils.extract_bboxes(mask_expanded)
 				
@@ -1315,7 +1321,10 @@ class Analyzer(object):
 				# - Compute bounding box, check integrity
 				height= masks_merged[index].shape[0]
 				width= masks_merged[index].shape[1]
-				mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+				try:
+					mask_expanded = np.zeros([height,width,1],dtype=np.bool)
+				except:
+					mask_expanded = np.zeros([height,width,1],dtype=bool)
 				mask_expanded[:,:,0]= masks_merged[index]
 				bbox= utils.extract_bboxes(mask_expanded)
 
@@ -1589,8 +1598,11 @@ class Analyzer(object):
 					continue
 
 				iou= addon_utils.get_iou(bbox, bbox_gt)
-				mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
-
+				try:
+					mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
+				except:
+					mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(bool), average='binary')
+					
 				logger.info("IOU(det=%d,true=%d)=%f, MaskIOU(det=%d,true=%d)=%f" % (j,i,iou,j,i,mask_iou))
 				#if iou>=self.iou_thr and iou>=iou_best:
 				if mask_iou>=self.iou_thr and mask_iou>=iou_best:
@@ -1654,8 +1666,10 @@ class Analyzer(object):
 					continue
 
 				iou= addon_utils.get_iou(bbox, bbox_gt)
-				mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
-
+				try:
+					mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(np.bool), average='binary')
+				except:
+					mask_iou= jaccard_score(self.masks_final[j].flatten(), self.masks_gt_merged[i].flatten().astype(bool), average='binary')
 				#if iou>=self.iou_thr and iou>=iou_best:
 				if mask_iou>=self.iou_thr and mask_iou>=iou_best:
 					index_best= i

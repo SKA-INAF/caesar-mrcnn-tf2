@@ -584,9 +584,8 @@ def build_detection_targets(rpn_rois, gt_class_ids, gt_boxes, gt_masks,
         gt_class_ids.dtype)
     assert gt_boxes.dtype == np.int32, "Expected int but got {}".format(
         gt_boxes.dtype)
-    assert gt_masks.dtype == np.bool_, "Expected bool but got {}".format(
-        gt_masks.dtype)
-
+    assert gt_masks.dtype == np.bool_, "Expected bool but got {}".format(gt_masks.dtype)
+    
     # It's common to add GT Boxes to ROIs but we don't do that here because
     # according to XinLei Chen's paper, it doesn't help.
 
@@ -986,9 +985,15 @@ def unmold_mask(mask, bbox, image_shape):
     threshold = 0.5
     y1, x1, y2, x2 = bbox
     mask = resize(mask, (y2 - y1, x2 - x1))
-    mask = np.where(mask >= threshold, 1, 0).astype(np.bool)
+    try:
+      mask = np.where(mask >= threshold, 1, 0).astype(np.bool)
+    except:
+      mask = np.where(mask >= threshold, 1, 0).astype(bool)
     # Put the mask in the right location.
-    full_mask = np.zeros(image_shape[:2], dtype=np.bool)
+    try:
+      full_mask = np.zeros(image_shape[:2], dtype=np.bool)
+    except:
+      full_mask = np.zeros(image_shape[:2], dtype=bool)
     # Fix possible shape mismatch
     real_img_shape = full_mask[y1:y2, x1:x2].shape
     full_mask[y1:y2, x1:x2] = mask[:real_img_shape[0], :real_img_shape[1]]
