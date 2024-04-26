@@ -169,7 +169,7 @@ def parse_args():
 	parser.add_argument('--no_mrcnn_mask_loss', dest='mrcnn_mask_loss', action='store_false')
 	parser.set_defaults(mrcnn_mask_loss=True)
 	
-	parser.add_argument('--no_l2reg_loss', dest='no_l2reg_loss', action='store_false')
+	parser.add_argument('--no_l2reg_loss', dest='l2reg_loss', action='store_false')
 	parser.set_defaults(l2reg_loss=True)
 
 	parser.add_argument('--weight_classes', dest='weight_classes', action='store_true')	
