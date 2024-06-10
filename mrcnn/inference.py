@@ -182,8 +182,8 @@ class TileTask(object):
 		image_path= self.config['image_path']
 		res= addon_utils.read_fits_crop(
 			image_path, 
-			xmin= self.ix_min, xmax= self.ix_max,
-			ymin= self.iy_min, ymax= self.iy_max,
+			ixmin= self.ix_min, ixmax= self.ix_max,
+			iymin= self.iy_min, iymax= self.iy_max,
 			strip_deg_axis=True
 		)
 		if res is None:
@@ -849,8 +849,10 @@ class SFinder(object):
 					pixels_merged= merged
 
 				# - Set class & score of merged source
-				sindex_largest= sourcesToBeMerged[index].sindex
-				tindex_largest= sourcesToBeMerged[index].tindex
+				#sindex_largest= sourcesToBeMerged[index].sindex
+				#tindex_largest= sourcesToBeMerged[index].tindex
+				sindex_largest= sourcesToBeMerged[index_largest].sindex
+				tindex_largest= sourcesToBeMerged[index_largest].tindex
 				source_largest= self.tile_sources["sources"][tindex_largest]["objs"][sindex_largest]
 				score_merged= source_largest["score"]
 				className_merged= source_largest["class_name"]
