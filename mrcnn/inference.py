@@ -477,7 +477,7 @@ class SFinder(object):
 		analyzer.iou_thr= self.config['iou_thr']
 		analyzer.score_thr= self.config['score_thr']
 
-		if analyzer.predict(image_data, image_id)<0:
+		if analyzer.predict(image_data, self.image_id)<0:
 			logger.error("Failed to run model prediction on image %s!" % (image_path))
 			return -1
 
