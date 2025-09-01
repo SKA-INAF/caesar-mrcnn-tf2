@@ -201,9 +201,7 @@ def parse_args():
 	parser.add_argument('--xmax', dest='xmax', required=False, type=int, default=-1, help='Image max x to be read (read all if -1)') 
 	parser.add_argument('--ymin', dest='ymin', required=False, type=int, default=-1, help='Image min y to be read (read all if -1)') 
 	parser.add_argument('--ymax', dest='ymax', required=False, type=int, default=-1, help='Image max y to be read (read all if -1)') 
-	parser.add_argument('--detect_outfile', required=False, metavar="Output plot filename", type=str, default="", help='Output plot PNG filename (internally generated if left empty)')
-	parser.add_argument('--detect_outfile_json', required=False, metavar="Output json filename with detected objects", type=str, default="", help='Output json filename with detected objects (internally generated if left empty)')
-
+	
 	# - PARALLEL PROCESSING OPTIONS
 	parser.add_argument('--split_img_in_tiles', dest='split_img_in_tiles', action='store_true')	
 	parser.set_defaults(split_img_in_tiles=False)
@@ -228,6 +226,11 @@ def parse_args():
 	parser.set_defaults(draw_class_label_in_caption=False)
 	parser.add_argument('--save_plots', dest='save_plots', action='store_true')	
 	parser.set_defaults(save_plots=False)
+
+	# - SAVE OPTIONS
+	parser.add_argument('--detect_outfile', required=False, metavar="Output plot filename", type=str, default="", help='Output plot PNG filename (internally generated if left empty)')
+	parser.add_argument('--detect_outfile_json', required=False, metavar="Output json filename with detected objects", type=str, default="", help='Output json filename with detected objects (internally generated if left empty)')
+
 
 	args = parser.parse_args()
 
