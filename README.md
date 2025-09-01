@@ -44,7 +44,9 @@ Supported options are:
   `--require_classes`: Require at least one oject class of `required_classes` to be present in image to consider this input data in data loading. Default: disabled   
   `--required_classes=[VALUE]`: List of required object classes. Default: 'extended,extended-multisland,flagged,spurious'    
   
-**MODEL**  
+**MODEL**    
+  `--weights=[VALUE]`: Path to model weights .h5 file. Default: ''    
+  `--backbone_weights=[VALUE]`: Backbone network initialization weights: {random, imagenet, Path to weights .h5 file}. Default: 'random'     
   `--classdict=[VALUE]`: Class id dictionary used when loading dataset. Default: '{"sidelobe":1,"source":2,"galaxy":3}'     
   `--classdict_model=[VALUE]`: Class id dictionary used for the model (if empty, it is set equal to classdict). Default: ''    
   `--remap_classids`: Size in pixel used to resize input image. Default: 256     
@@ -75,9 +77,44 @@ Supported options are:
 **DATA AUGMENTATION**   
   `--use_augmentation`: Run data augmentation on input images. Default: disabled  
   `--augmenter=[VALUE]`: Augmenter version to be used {"v1","v2","v3"}. "v1" is equal to TF1 caesar-mrcnn. Default: "v1"  
+
+**MODEL TRAINING**    
+  `--nepochs=[VALUE]`: Number of training epochs. Default: 1  
+  `--rpn_anchor_scales=[VALUES]`: RPN anchor scales in pixels (5 comma-separated values). Default: '4,8,16,32,64'  
+  `--max_gt_instances=[VALUE]`: Max GT instances. Default: 300  
+  `--backbone=[VALUE]`: Backbone network {resnet101,resnet50,custom}. Default: resnet101  
+  `--freeze_backbone`: Freeze backbone weights. Default: free  
+  `--backbone_strides=[VALUES]`: Backbone strides in pixels (5 comma-separated values). Default: '4,8,16,32,64'   
+  `--rpn_nms_threshold=[VALUE]`: RPN Non-Maximum-Suppression threshold. Default: 0.7  
+  `--rpn_train_anchors_per_image=[VALUE]`: Number of anchors per image to use for RPN training. Default: 512  
+  `--train_rois_per_image=[VALUE]`: Number of ROIs per image to feed to classifier/mask heads. Default: 512  
+  `--rpn_anchor_ratios=[VALUES]`: RPN anchor ratios, comma separated. Default: '0.5,1,2'  
+  `--rpn_class_loss_weight=[VALUE]`: RPN classification loss weight. Default: 1.0  
+  `--rpn_bbox_loss_weight=[VALUE]`: RPN bounding box loss weight. Default: 1.0  
+  `--mrcnn_class_loss_weight=[VALUE]`: Classification loss weight. Default: 1.0  
+  `--mrcnn_bbox_loss_weight=[VALUE]`: Bounding box loss weight. Default: 1.0  
+  `--mrcnn_mask_loss_weight=[VALUE]`: Mask loss weight. Default: 1.0  
+  `--rpn_class_loss`: Enable RPN classification loss.   
+  `--no_rpn_class_loss`: Disable RPN classification loss.     
+  `--rpn_bbox_loss`: Enable RPN box loss.   
+  `--no_rpn_bbox_loss`: Disable RPN box loss.    
+  `--mrcnn_class_loss`: Enable classification loss.    
+  `--no_mrcnn_class_loss`: Disable classification loss.     
+  `--mrcnn_bbox_loss`: Enable box loss.    
+  `--no_mrcnn_bbox_loss`: Disable box loss.     
+  `--mrcnn_mask_loss`: Enable mask loss.     
+  `--no_mrcnn_mask_loss`: Disable mask loss.    
+  `--no_l2reg_loss`: Disable L2 regularization loss.    
+  `--weight_classes`: Enable weighting of object classes.    
+  `--optimizer=[VALUE]`: Optimizer {sgd,adam,adamax}. Default: sgd     
+  `--learning_rate=[VALUE]`: Learning rate. Default: 0.0005     
+  `--opt_momentum=[VALUE]`: Momentum parameter in SGD. Default: 0.9    
+  `--opt_clipnorm=[VALUE]`: clipnorm optimizer parameter. Default: 5.0    
+  `--opt_clipvalue=[VALUE]`: clipvalue optimizer parameter. Default: None             	
  
- 
-	
-	
+**RUN**     
+   `--ngpu`: Number of GPUs used. Default: 1    
+   `--nimg_per_gpu`: Number of images per gpu. Default: 1        
+  
 	
 	
