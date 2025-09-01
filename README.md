@@ -111,6 +111,13 @@ Supported options are:
   `--opt_momentum=[VALUE]`: Momentum parameter in SGD. Default: 0.9    
   `--opt_clipnorm=[VALUE]`: clipnorm optimizer parameter. Default: 5.0    
   `--opt_clipvalue=[VALUE]`: clipvalue optimizer parameter. Default: None             	
+
+**MODEL INFERENCE**    
+  `--image=[VALUE]`: Input image in FITS format used in inference. Default: ''    
+  `--scoreThr=[VALUE]`: Object detection score threshold to be used during test/inference. Default: 0.7   
+  `--iouThr=[VALUE]`: IOU threshold used to match detected objects with true objects. Default: 0.6    
+  `--consider_sources_near_mixed_sidelobes`: Consider sources tagged as mixed with sidelobes for the inference/test.   
+  `--no_consider_sources_near_mixed_sidelobes`: Do not consider sources tagged as mixed with sidelobes for the inference/test.     	  
  
 **RUN**     
    `--ngpu`: Number of GPUs used. Default: 1    
