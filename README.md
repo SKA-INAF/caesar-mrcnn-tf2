@@ -110,10 +110,15 @@ Supported options are:
   `--learning_rate=[VALUE]`: Learning rate. Default: 0.0005     
   `--opt_momentum=[VALUE]`: Momentum parameter in SGD. Default: 0.9    
   `--opt_clipnorm=[VALUE]`: clipnorm optimizer parameter. Default: 5.0    
-  `--opt_clipvalue=[VALUE]`: clipvalue optimizer parameter. Default: None             	
+  `--opt_clipvalue=[VALUE]`: clipvalue optimizer parameter. Default: None        
+  `--enable_checkpoints`: Enable saving of model checkpoints. Default: disabled   
 
 **MODEL INFERENCE**    
   `--image=[VALUE]`: Input image in FITS format used in inference. Default: ''    
+  `--xmin=[VALUE]`: Image min x to be read (read all if -1). Default: -1   
+  `--xmax=[VALUE]`: Image max x to be read (read all if -1). Default: -1   
+  `--ymin=[VALUE]`: Image min y to be read (read all if -1). Default: -1   
+  `--ymax=[VALUE]`: Image max y to be read (read all if -1). Default: -1   	
   `--scoreThr=[VALUE]`: Object detection score threshold to be used during test/inference. Default: 0.7   
   `--iouThr=[VALUE]`: IOU threshold used to match detected objects with true objects. Default: 0.6    
   `--consider_sources_near_mixed_sidelobes`: Consider sources tagged as mixed with sidelobes for the inference/test.   
@@ -122,6 +127,21 @@ Supported options are:
 **RUN**     
    `--ngpu`: Number of GPUs used. Default: 1    
    `--nimg_per_gpu`: Number of images per gpu. Default: 1        
-  
-	
-	
+   
+**PARALLEL PROCESSING**  
+	`--split_img_in_tiles`: Enable splitting of input image in multiple subtiles for parallel processing. Default: disabled   
+ 	`--tile_xsize=[VALUE]`: Sub image size in pixel along x. Default: 512   
+	`--tile_ysize=[VALUE]`: Sub image size in pixel along y. Default: 512   
+	`--tile_xstep=[VALUE]`: Sub image step fraction along x (=1 means no overlap). Default: 1.0   
+ 	`--tile_ystep=[VALUE]`: Sub image step fraction along y (=1 means no overlap). Default: 1.0    
+  	`--max_ntasks_per_worker=[VALUE]`: Max number of tasks assigned to a MPI processor worker. Default: 100      	
+
+**PLOTTING**  
+	`--draw`: Enable plotting. Default: disabled    
+	`--draw_shaded_masks`: Enable plotting of shaded masks. Default: disabled    
+ 	`--draw_class_label_in_caption`: Enable plotting of class labels inside object caption. Default: disabled   
+  	
+**OUTPUT DATA**  
+	`--save_plots`: Enable saving of inference plots. Default: disabled   
+	`--detect_outfile`: Output plot PNG filename (internally generated if left empty). Default: empty   
+	`--detect_outfile_json`: Output json filename with detected objects (internally generated if left empty). Default: empty      	
