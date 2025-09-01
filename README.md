@@ -145,3 +145,87 @@ Supported options are:
 	`--save_plots`: Enable saving of inference plots. Default: disabled   
 	`--detect_outfile`: Output plot PNG filename (internally generated if left empty). Default: empty   
 	`--detect_outfile_json`: Output json filename with detected objects (internally generated if left empty). Default: empty      	
+
+### Model training   
+Below, we report a sample run script for training Mask-RNN model:   
+
+```
+#!/bin/bash
+
+######################
+##   SET ENV
+######################
+VENV_DIR="/opt/software/venvs/caesar-mrcnn-tf2"
+SCRIPT_DIR="$VENV_DIR/bin"
+source $SCRIPT_DIR/activate
+
+######################
+##   RUN OPTIONS
+######################
+# - DATA OPTIONS
+TRAIN_DATA="/opt/data/train.dat"
+CV_DATA="/opt/data/crossval.dat"
+CLASS_DICT="{\"spurious\":1,\"compact\":2,\"extended\":3,\"extended-multisland\":4,\"flagged\":5}"
+
+# - TRAIN OPTIONS
+NEPOCHS=10
+WEIGHTS="" # train from scratch
+
+# - PREPROCESSING OPTIONS
+IMGSIZE=256
+PREPROC_OPTS="--imgsize=$IMGSIZE --nchannels=3 --chan3_preproc --sigma_clip_baseline=0 --sigma_clip_low=1 --sigma_clip_up=20 --normalize_minmax "
+
+# - RUN OPTIONS
+NGPU=1
+NIMG_PER_GPU=1
+NTHREADS=1
+RUN_OPTS="--ngpu=$NGPU --nimg_per_gpu=$NIMG_PER_GPU "
+
+# - MODEL ARCHITECTURE OPTIONS
+BACKBONE="resnet101"
+BACKBONE_WEIGHTS="random"
+RPN_ANCHOR_SCALES="8,16,32,64,128"
+MAX_GT_INSTANCES=200
+BACKBONE_STRIDES="4,8,16,32,64" ## this are for resnet101
+RPN_NMS_THRESHOLD=0.7
+RPN_TRAIN_ANCHORS_PER_IMAGE=256
+TRAIN_ROIS_PER_IMAGE=256
+RPN_ANCHOR_RATIOS="0.2,0.3,0.5,1,2,3,4,5"
+MODEL_ARC_OPTS="--backbone=$BACKBONE --backbone_weights=$BACKBONE_WEIGHTS --rpn_anchor_scales=$RPN_ANCHOR_SCALES --max_gt_instances=$MAX_GT_INSTANCES --backbone_strides=$BACKBONE_STRIDES --rpn_nms_threshold=$RPN_NMS_THRESHOLD --rpn_train_anchors_per_image=$RPN_TRAIN_ANCHORS_PER_IMAGE --train_rois_per_image=$TRAIN_ROIS_PER_IMAGE --rpn_anchor_ratio=$RPN_ANCHOR_RATIOS "
+
+# - LOSS OPTIONS
+MRCNN_BBOX_LOSS_WEIGHT=0.1
+MRCNN_CLASS_LOSS_WEIGHT=1.0
+MRCNN_MASK_LOSS_WEIGHT=0.1
+RPN_BBOX_LOSS_WEIGHT=0.1
+RPN_CLASS_LOSS_WEIGHT=1.0
+LOSS_OPTS="--rpn_class_loss_weight=$RPN_CLASS_LOSS_WEIGHT --rpn_bbox_loss_weight=$RPN_BBOX_LOSS_WEIGHT --mrcnn_class_loss_weight=$MRCNN_CLASS_LOSS_WEIGHT --mrcnn_bbox_loss_weight=$MRCNN_BBOX_LOSS_WEIGHT -
+-mrcnn_mask_loss_weight=$MRCNN_MASK_LOSS_WEIGHT "
+
+# - CLASS WEIGHTS
+CLASS_WEIGHTS_OPTS=""
+
+# - AUGMENTATION 
+AUG_OPTS=""
+#AUG_OPTS="--use_augmentation --augmenter=v3 "
+
+##################################
+##      RUN
+##################################
+echo "INFO: Start run ..."
+date
+
+python $VENV_DIR/bin/run.py --datalist=$TRAIN_DATA --datalist_val=$CV_DATA \
+  --classdict=$CLASS_DICT --classdict_model=$CLASS_DICT \
+  --weights=$WEIGHTS --nepochs=$NEPOCHS \
+  $RUN_OPTS \
+  $PREPROC_OPTS \
+  $MODEL_ARC_OPTS \
+  $LOSS_OPTS \
+  $CLASS_WEIGHTS_OPTS \
+  $AUG_OPTS \
+  train
+
+echo "INFO: End run"
+date
+```
