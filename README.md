@@ -168,12 +168,19 @@ CV_DATA="/opt/data/crossval.dat"
 CLASS_DICT="{\"spurious\":1,\"compact\":2,\"extended\":3,\"extended-multisland\":4,\"flagged\":5}"
 
 # - TRAIN OPTIONS
-NEPOCHS=10
+NEPOCHS=100
 WEIGHTS="" # train from scratch
 
 # - PREPROCESSING OPTIONS
-IMGSIZE=256
-PREPROC_OPTS="--imgsize=$IMGSIZE --nchannels=3 --chan3_preproc --sigma_clip_baseline=0 --sigma_clip_low=1 --sigma_clip_up=20 --normalize_minmax "
+IMGSIZE=224
+PREPROC_OPTS="--imgsize=$IMGSIZE --nchannels=3 --zscale_stretch --zscale_contrasts=0.0,0.25,0.4 --clip_data --sigma_clip_low=5 --sigma_clip_up=30 --clip_chid=0 --normalize_minmax "
+
+# - OPTIMIZER OPTIONS
+##LEARNING_RATE="1.e-6"
+LEARNING_RATE="5.e-4"
+MOMENTUM="0.9"
+CLIPNORM="5.0"
+OPTIMIZER_OPTS="--optimizer=$OPTIMIZER --learning_rate=$LEARNING_RATE --opt_momentum=$MOMENTUM --opt_clipnorm=$CLIPNORM "
 
 # - RUN OPTIONS
 NGPU=1
@@ -206,8 +213,7 @@ LOSS_OPTS="--rpn_class_loss_weight=$RPN_CLASS_LOSS_WEIGHT --rpn_bbox_loss_weight
 CLASS_WEIGHTS_OPTS=""
 
 # - AUGMENTATION 
-AUG_OPTS=""
-#AUG_OPTS="--use_augmentation --augmenter=v3 "
+AUG_OPTS="--use_augmentation --augmenter=v1 "
 
 ##################################
 ##      RUN
@@ -220,6 +226,7 @@ python $VENV_DIR/bin/run.py --datalist=$TRAIN_DATA --datalist_val=$CV_DATA \
   --weights=$WEIGHTS --nepochs=$NEPOCHS \
   $RUN_OPTS \
   $PREPROC_OPTS \
+  $OPTIMIZER_OPTS \
   $MODEL_ARC_OPTS \
   $LOSS_OPTS \
   $CLASS_WEIGHTS_OPTS \
