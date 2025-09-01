@@ -236,3 +236,33 @@ python $VENV_DIR/bin/run.py --datalist=$TRAIN_DATA --datalist_val=$CV_DATA \
 echo "INFO: End run"
 date
 ```
+
+## **Pre-trained models**  
+We have trained the Mask-RCNN TF2 model from scratch on the same annotated radio dataset that was previously used to train Mask R-CNN TF1 model in paper Riggi+2023 (see Credits for full reference). 
+Models were trained to detect 5 classes of radio objects:   
+
+0: `spurious`   
+1: `compact`   
+2: `extended`   
+3: `extended-multisland`   
+4: `flagged`    
+
+See the original publication for a description of each class.    
+We provide below the training configuration we used for producing the models and links to pre-trained model weights.
+
+**Training configuration**
+* nepochs=250
+* CLASS_DICT="{\"spurious\":1,\"compact\":2,\"extended\":3,\"extended-multisland\":4,\"flagged\":5}"
+* DATA_OPTS="--classdict=$CLASS_DICT --classdict_model=$CLASS_DICT "
+* PREPROC_OPTS="--imgsize=256 --nchannels=3 --zscale_stretch --zscale_contrasts=0.25,0.25,0.25 --clip_data --sigma_clip_low=5 --sigma_clip_up=20 --normalize_minmax "
+* AUG_OPTS="--use_augmentation --augmenter=v1"
+* CLASS_WEIGHTS_OPTS=""
+* LOSS_OPTS="--rpn_class_loss_weight=1.0 --rpn_bbox_loss_weight=0.1 --mrcnn_class_loss_weight=1.0 --mrcnn_bbox_loss_weight=0.1 --mrcnn_mask_loss_weight=0.1 "
+* MODEL_ARC_OPTS="--backbone=resnet101 --backbone_weights=random --rpn_anchor_scales=8,16,32,64,128 --max_gt_instances=200 --backbone_strides=4,8,16,32,64 --rpn_nms_threshold=0.7 --rpn_train_anchors_per_image=256 --train_rois_per_image=256--rpn_anchor_ratio=0.2,0.3,0.5,1,2,3,4,5 "
+* OPTIMIZER_OPTS="--optimizer=sgd --learning_rate=5.e-4 --opt_momentum=0.9 --opt_clipnorm=5.0 "
+
+**Trained models**
+
+| Model Base  | Img Size | Weights | File Size | Notes |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| resnet101  | 256  | [url]([XXX](https://tinyurl.com/ysu8djdw)) | 245 MB | |
